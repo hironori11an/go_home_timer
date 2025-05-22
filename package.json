@@ -11,14 +11,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20250519.0",
     "date-fns": "^4.1.0",
+    "firebase": "^11.8.1",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250522.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -27,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.16.0"
   }
 }

@@ -1,10 +1,13 @@
-name = "go-home-timer-worker"
+name = "go-home-timer"
 main = "src/worker/index.ts"
-compatibility_date = "2024-03-20"
+compatibility_date = "2024-01-01"
 
 [build]
 command = "npm run build:worker"
 watch_dir = "src/worker"
 
 [site]
-bucket = "./public" 
+bucket = "./public"
+
+[vars]
+FCM_SERVER_KEY = "" # ここにFCMのサーバーキーを設定してください 

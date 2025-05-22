@@ -1,87 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
+import { confirmNotification } from '@/lib/firebase';
 
 export default function Home() {
-  const [reminders, setReminders] = useState<string[]>([]);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
-
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setNotificationPermission(Notification.permission);
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js")
-          .then(registration => {
-            console.log("Service Worker registered with scope:", registration.scope);
-            console.log("Service Worker state:", registration.active ? "active" : "inactive");
-            if (registration.active) {
-              console.log("Service Worker is active and ready to handle notifications");
-            }
-          })
-          .catch(error => {
-            console.error("Service Worker registration failed:", error);
-          });
-      } else {
-        console.log("Service Worker is not supported in this browser");
-      }
-    }
+    confirmNotification()
   }, []);
-
-  const handleRequestPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
-    }
-  };
-
-  const handleRemind = () => {
-    if (notificationPermission !== "granted") {
-      alert("通知が許可されていません。");
-      return;
-    }
-    const reminder = `リマインダー: ${new Date().toLocaleTimeString()}`;
-    setReminders([...reminders, reminder]);
-    setTimeout(() => {
-      new Notification("リマインダー", { body: reminder });
-    }, 10000);
-  };
-
-  const handleTestNotification = async () => {
-    console.log("テスト通知送信ボタンが押されました");
-    console.log("現在の通知許可状態:", notificationPermission);
-    if (notificationPermission !== "granted") {
-      alert("通知が許可されていません。");
-      return;
-    }
-    
-    try {
-      console.log("Service Workerの登録を確認中...");
-      const registration = await navigator.serviceWorker.ready;
-      console.log("Service Worker registration:", registration);
-      console.log("Service Worker active:", registration.active);
-      
-      if (!registration.active) {
-        throw new Error("Service Worker is not active");
-      }
-
-      console.log("通知を送信します...");
-      const notification = new Notification("テスト通知", {
-        body: "これはテスト通知です。",
-        icon: "/icon.png",
-        badge: "/badge.png"
-      });
-      
-      notification.onclick = () => {
-        console.log("通知がクリックされました");
-        window.focus();
-      };
-      
-      console.log("通知の送信が完了しました");
-    } catch (error) {
-      console.error("通知の送信に失敗しました:", error);
-      alert("通知の送信に失敗しました。");
-    }
-  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -132,40 +57,6 @@ export default function Home() {
             Read our docs
           </a>
         </div>
-
-        <h1 className="text-2xl font-bold mb-4">リマインダー</h1>
-        <div className="mb-4 flex flex-col gap-2 items-center">
-          <button
-            onClick={handleRequestPermission}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            disabled={notificationPermission === "granted"}
-          >
-            通知を許可
-          </button>
-          <span className="text-sm">
-            通知の許可状態: {notificationPermission ?? "未取得"}
-          </span>
-        </div>
-        <button
-          onClick={handleRemind}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          10秒後にリマインド
-        </button>
-        <button
-          onClick={handleTestNotification}
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-        >
-          テスト通知を送信
-        </button>
-        <ul className="w-80 bg-white rounded shadow p-4">
-          {reminders.length === 0 && <li className="text-gray-400">リマインダーはありません</li>}
-          {reminders.map((reminder, idx) => (
-            <li key={idx} className="border-b last:border-b-0 py-2">
-              {reminder}
-            </li>
-          ))}
-        </ul>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a
