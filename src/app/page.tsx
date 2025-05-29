@@ -5,12 +5,28 @@ import { confirmNotification } from '@/lib/firebase';
 
 export default function Home() {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<'loading' | 'success' | 'error' | 'unsupported'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const initNotification = async () => {
-      const token = await confirmNotification();
-      setFcmToken(token);
+      try {
+        setNotificationStatus('loading');
+        const token = await confirmNotification();
+        if (token) {
+          setFcmToken(token);
+          setNotificationStatus('success');
+        } else {
+          setNotificationStatus('unsupported');
+          setErrorMessage('ブラウザが通知をサポートしていないか、権限が拒否されました');
+        }
+      } catch (error) {
+        console.error('Notification initialization error:', error);
+        setNotificationStatus('error');
+        setErrorMessage(error instanceof Error ? error.message : '通知の初期化に失敗しました');
+      }
     };
+    
     initNotification();
   }, []);
 
@@ -59,7 +75,10 @@ export default function Home() {
         {/* プッシュ通知テストセクション */}
         <div className="border border-gray-300 rounded-lg p-6 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-4">プッシュ通知テスト</h2>
-          {fcmToken ? (
+          {notificationStatus === 'loading' && (
+            <p className="text-sm text-blue-600">⏳ FCMトークンを取得中...</p>
+          )}
+          {notificationStatus === 'success' && fcmToken && (
             <div>
               <p className="text-sm text-green-600 mb-4">✅ FCMトークン取得済み</p>
               <p className="text-xs text-gray-500 mb-4 break-all">
@@ -72,8 +91,12 @@ export default function Home() {
                 テスト通知を送信
               </button>
             </div>
-          ) : (
-            <p className="text-sm text-orange-600">⏳ FCMトークンを取得中...</p>
+          )}
+          {(notificationStatus === 'error' || notificationStatus === 'unsupported') && (
+            <div>
+              <p className="text-sm text-red-600 mb-2">❌ 通知の設定に問題があります</p>
+              <p className="text-xs text-gray-600">{errorMessage}</p>
+            </div>
           )}
         </div>
 

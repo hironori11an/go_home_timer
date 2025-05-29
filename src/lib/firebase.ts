@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,40 +12,57 @@ const firebaseConfig = {
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
-const messaging = getMessaging(firebaseApp);
+
+// クライアントサイドでのみMessagingを初期化
+let messaging: Messaging | null = null;
+if (typeof window !== 'undefined') {
+  messaging = getMessaging(firebaseApp);
+}
 
 export async function confirmNotification() {
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js`);
-      console.log('Service Worker registered with scope:', registration.scope);
-
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        console.log('Notification permission granted.');
-        const token = await getToken(messaging, {
-          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPIDKEY,
-          serviceWorkerRegistration: registration,
-        });
-        
-        if (token) {
-          console.log('FCM Token:', token);
-          // フォアグラウンドメッセージハンドラーを設定
-          setupForegroundMessageHandler();
-          // TODO: FCMトークンをDBに保存する
-          return token;
-        }
-      } 
-    } catch (error) {
-      console.error('Service Worker registration failed:', error);
-      throw error;
-    }
+  // ブラウザ環境でない場合は早期リターン
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    console.log('Service Worker not supported or not in browser environment');
+    return null;
   }
+
+  // messagingが初期化されていない場合は初期化
+  if (!messaging) {
+    messaging = getMessaging(firebaseApp);
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js`);
+    console.log('Service Worker registered with scope:', registration.scope);
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('Notification permission granted.');
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPIDKEY,
+        serviceWorkerRegistration: registration,
+      });
+      
+      if (token) {
+        console.log('FCM Token:', token);
+        // フォアグラウンドメッセージハンドラーを設定
+        setupForegroundMessageHandler();
+        // TODO: FCMトークンをDBに保存する
+        return token;
+      }
+    } 
+  } catch (error) {
+    console.error('Service Worker registration failed:', error);
+    throw error;
+  }
+  
   return null;
 }
 
 // フォアグラウンドでのメッセージ受信処理
 function setupForegroundMessageHandler() {
+  if (!messaging) return;
+  
   onMessage(messaging, (payload) => {
     console.log('Foreground message received:', payload);
     

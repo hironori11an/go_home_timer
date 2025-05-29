@@ -1,6 +1,8 @@
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-messaging-compat.js');
 
+// Service Workerでは環境変数にアクセスできないため、
+// 設定はメインスレッドから渡される想定
 const firebaseConfig = {
     apiKey: "AIzaSyCsHKEquFb9pCb4XChZG6bQ6EnGNArzzsI",
     authDomain: "go-home-timer.firebaseapp.com",
@@ -9,7 +11,7 @@ const firebaseConfig = {
     messagingSenderId: "984901580554",
     appId: "1:984901580554:web:ffb1826329963539866cf3",
     measurementId: "G-LH2J4NJG2Q"
-  };
+};
 
 firebase.initializeApp(firebaseConfig);
 
