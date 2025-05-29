@@ -3,14 +3,14 @@ export interface FCMMessage {
   notification: {
     title: string;
     body: string;
-    icon?: string;
-    badge?: string;
   };
   data?: Record<string, string>;
   webpush?: {
     headers?: Record<string, string>;
     data?: Record<string, unknown>;
     notification?: {
+      icon?: string;
+      badge?: string;
       actions?: Array<{
         action: string;
         title: string;

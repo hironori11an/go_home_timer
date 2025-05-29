@@ -24,8 +24,6 @@ app.post('/send-notification', async (c) => {
   try {
     const body = await c.req.json() as {
       token: string;
-      title: string;
-      body: string;
       icon?: string;
       badge?: string;
       data?: Record<string, string>;
@@ -36,9 +34,9 @@ app.post('/send-notification', async (c) => {
       }>;
     };
 
-    if (!body.token || !body.title || !body.body) {
+    if (!body.token) {
       return c.json(
-        { error: 'token, title, bodyは必須です' }, 
+        { error: 'tokenは必須です' }, 
         400
       );
     }
@@ -48,14 +46,14 @@ app.post('/send-notification', async (c) => {
     const message: FCMMessage = {
       token: body.token,
       notification: {
-        title: body.title,
-        body: body.body,
-        icon: body.icon,
-        badge: body.badge,
+        title: '帰宅時間のお知らせ',
+        body: 'お疲れ様でした！今日も一日頑張りましたね。',
       },
       data: body.data,
       webpush: {
         notification: {
+          icon: body.icon,
+          badge: body.badge,
           actions: body.actions,
         },
       },

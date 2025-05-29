@@ -44,8 +44,6 @@ export default function Home() {
         },
         body: JSON.stringify({
           token: fcmToken,
-          title: 'テスト通知',
-          body: 'これはフロント側からのテスト通知です',
           icon: '/icon.png',
           badge: '/badge.png'
         })
