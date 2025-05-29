@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+実装前に技術仕様を確認してから実装してください
+
+# 技術仕様
+
+- FrontEnd
+  - Next.js@15.3.2
+  - Vercelでホスティング
+- Service Worker
+  - Cloudflare Workers
+- Webプッシュ通知
+  - FCM
