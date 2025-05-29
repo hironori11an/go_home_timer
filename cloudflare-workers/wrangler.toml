@@ -1,0 +1,10 @@
+name = "fcm-web-push-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[env.development]
+name = "fcm-web-push-worker-dev"
+
+[env.production]
+name = "fcm-web-push-worker-prod" 

@@ -1,0 +1,4 @@
+# Firebase Cloud Messaging Settings
+FCM_PROJECT_ID="your-firebase-project-id"
+FCM_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----"
+FCM_CLIENT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com" 

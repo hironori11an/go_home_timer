@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -30,6 +30,8 @@ export async function confirmNotification() {
         
         if (token) {
           console.log('FCM Token:', token);
+          // フォアグラウンドメッセージハンドラーを設定
+          setupForegroundMessageHandler();
           // TODO: FCMトークンをDBに保存する
           return token;
         }
@@ -40,6 +42,26 @@ export async function confirmNotification() {
     }
   }
   return null;
+}
+
+// フォアグラウンドでのメッセージ受信処理
+function setupForegroundMessageHandler() {
+  onMessage(messaging, (payload) => {
+    console.log('Foreground message received:', payload);
+    
+    // ページがアクティブな時は手動で通知を表示
+    if (payload.notification) {
+      const notificationOptions = {
+        body: payload.notification.body,
+        icon: payload.notification.icon || '/icon.png',
+        badge: payload.notification.badge || '/badge.png',
+        data: payload.data,
+        actions: payload.webpush?.notification?.actions || []
+      };
+
+      new Notification(payload.notification.title, notificationOptions);
+    }
+  });
 }
 
 export { firebaseApp, messaging }; 

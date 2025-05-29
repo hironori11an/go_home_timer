@@ -1,12 +1,48 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { confirmNotification } from '@/lib/firebase';
 
 export default function Home() {
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
   useEffect(() => {
-    confirmNotification()
+    const initNotification = async () => {
+      const token = await confirmNotification();
+      setFcmToken(token);
+    };
+    initNotification();
   }, []);
+
+  const sendTestNotification = async () => {
+    if (!fcmToken) {
+      alert('FCMトークンが取得されていません');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: fcmToken,
+          title: 'テスト通知',
+          body: 'これはフロント側からのテスト通知です',
+          icon: '/icon.png',
+          badge: '/badge.png'
+        })
+      });
+
+      const result = await response.json();
+      console.log('Test notification result:', result);
+      alert('テスト通知を送信しました。コンソールを確認してください。');
+    } catch (error) {
+      console.error('Test notification error:', error);
+      alert('テスト通知の送信に失敗しました');
+    }
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -19,6 +55,28 @@ export default function Home() {
           height={38}
           priority
         />
+        
+        {/* プッシュ通知テストセクション */}
+        <div className="border border-gray-300 rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-semibold mb-4">プッシュ通知テスト</h2>
+          {fcmToken ? (
+            <div>
+              <p className="text-sm text-green-600 mb-4">✅ FCMトークン取得済み</p>
+              <p className="text-xs text-gray-500 mb-4 break-all">
+                Token: {fcmToken.substring(0, 20)}...
+              </p>
+              <button
+                onClick={sendTestNotification}
+                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                テスト通知を送信
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-orange-600">⏳ FCMトークンを取得中...</p>
+          )}
+        </div>
+
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}
