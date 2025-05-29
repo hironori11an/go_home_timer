@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "build:worker": "wrangler build",
-    "deploy:worker": "wrangler deploy",
     "start": "next start",
     "lint": "next lint"
   },
@@ -28,7 +26,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "wrangler": "^4.16.0"
+    "typescript": "^5"
   }
 }
