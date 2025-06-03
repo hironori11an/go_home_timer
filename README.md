@@ -1,158 +1,161 @@
-# Go Home Timer
+# 🏠 おうちタイマー
 
-帰宅時間通知システム - 指定した時間にプッシュ通知を送信するWebアプリケーション
+長い針がここまで来たらおうちに帰ろうね！子ども向けの可愛いタイマーアプリです。
 
-## 📋 概要
+## ✨ 機能
 
-Go Home Timerは、設定した時間帯にプッシュ通知を送信することで、帰宅時間のリマインダーを提供するWebアプリケーションです。Firebase Cloud Messaging (FCM)とCloudflare Workersを活用したモダンなアーキテクチャで構築されています。
+- 📱 **モバイルファースト**: スマートフォンで使いやすいレスポンシブデザイン
+- 🕐 **アナログ時計**: 子どもにもわかりやすいアナログ時計表示
+- 🔔 **プッシュ通知**: 指定時刻にWebプッシュ通知でお知らせ
+- 🎯 **簡単操作**: 長針の数値（1-12）を選択するだけ
+- 🎨 **子ども向けUI**: 楽しくて分かりやすいインターフェース
 
-## 🏗️ アーキテクチャ
+## 🛠️ 技術仕様
 
-```
-[フロントエンド] → [Cloudflare Workers] → [Cloudflare Queue] → [FCM] → [ユーザーデバイス]
-     ↓                     ↓                    ↓
-[Next.js on Vercel]  [Service Worker]    [Notification Job]
-```
-
-## 🛠️ 技術スタック
-
-### フロントエンド
-- **Next.js** 15.3.2
-- **React** 19.0.0
-- **TypeScript** 5.x
-- **Tailwind CSS** 4.x
-- **Firebase SDK** 11.8.1
+- **フロントエンド**: Next.js 15.3.2
 - **ホスティング**: Vercel
-
-### バックエンド
-- **Cloudflare Workers**
-- **Cloudflare Queue**（通知スケジューリング用）
-- **TypeScript**
-
-### プッシュ通知
-- **Firebase Cloud Messaging (FCM)**
-- **Web Push**
-
-## 📁 プロジェクト構造
-
-```
-go_home_timer/
-├── src/                    # Next.jsフロントエンド
-│   ├── app/               # App Router
-│   │   ├── page.tsx       # メインページ
-│   │   ├── layout.tsx     # レイアウト
-│   │   └── api/           # API Routes
-│   └── lib/               # ユーティリティライブラリ
-├── cloudflare-workers/    # Cloudflare Workers
-│   ├── src/               # ワーカーソースコード
-│   ├── wrangler.toml      # Wrangler設定
-│   └── package.json       # ワーカー用依存関係
-├── docs/                  # 実装計画書
-├── public/                # 静的ファイル
-└── package.json           # メイン依存関係
-```
+- **通知サービス**: Firebase Cloud Messaging (FCM)
+- **スケジューリング**: Cloudflare Workers + Cloudflare Queue
+- **PWA対応**: Progressive Web App
 
 ## 🚀 セットアップ
 
 ### 前提条件
 
-- Node.js 20.x 以上
-- npm または yarn
-- Cloudflareアカウント
-- Firebaseプロジェクト
+- Node.js 20以上
+- Firebase プロジェクト
+- Cloudflare アカウント
 
-### 1. リポジトリのクローン
-
-```bash
-git clone <repository-url>
-cd go_home_timer
-```
-
-### 2. 依存関係のインストール
-
-```bash
-# フロントエンド
-npm install
-
-# Cloudflare Workers
-cd cloudflare-workers
-npm install
-cd ..
-```
-
-### 3. 環境変数の設定
-
-#### フロントエンド用
-`.env.local`ファイルを作成し、Firebase設定を追加：
-
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key
-```
-
-#### Cloudflare Workers用
-`cloudflare-workers/.dev.vars`ファイルを作成：
-
-```env
-FCM_SERVER_KEY=your_fcm_server_key
-FIREBASE_PROJECT_ID=your_project_id
-```
-
-### 4. Firebase設定
+### 1. Firebase の設定
 
 1. [Firebase Console](https://console.firebase.google.com/)でプロジェクトを作成
 2. Cloud Messagingを有効化
-3. Web Push証明書（VAPID キー）を生成
-4. サービスアカウントキーを取得
+3. Web アプリを追加してconfig情報を取得
+4. VAPID キーを生成
 
-## 🖥️ 開発
+### 2. 環境変数の設定
 
-### フロントエンドの起動
+`.env.local` ファイルを作成：
 
 ```bash
+# Firebase Configuration (Frontend)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key
+
+# Cloudflare Workers Configuration
+CLOUDFLARE_WORKER_URL=https://your-worker.your-subdomain.workers.dev
+CLOUDFLARE_WORKER_TOKEN=your_worker_auth_token
+```
+
+### 3. フロントエンドの起動
+
+```bash
+npm install
 npm run dev
 ```
 
-ブラウザで `http://localhost:3000` にアクセス
-
-### Cloudflare Workersの開発
+### 4. Cloudflare Workers のデプロイ
 
 ```bash
 cd cloudflare-workers
-npm run dev
+npm install
+wrangler deploy
 ```
 
-## 📦 デプロイ
+## 📱 使い方
 
-### フロントエンド（Vercel）
+1. アプリを開くとアナログ時計が表示されます
+2. 長い針がどの数値（1-12）まで来たら帰るかを選択
+3. 「タイマーをセット！」ボタンを押す
+4. 指定時刻になるとプッシュ通知でお知らせ
+
+## 🔧 開発
+
+### ローカル開発環境
 
 ```bash
+# フロントエンド
+npm run dev
+
+# Cloudflare Workers (別ターミナル)
+cd cloudflare-workers
+wrangler dev
+```
+
+### ビルドとデプロイ
+
+```bash
+# フロントエンド（Vercel）
 npm run build
-# Vercelにデプロイ
-```
 
-### Cloudflare Workers
-
-```bash
+# Cloudflare Workers
 cd cloudflare-workers
-npm run deploy
+wrangler deploy --env production
 ```
 
-## 🎯 機能
+## 📂 プロジェクト構成
 
-### 現在実装済み
-- ✅ FCMトークンの取得
-- ✅ プッシュ通知の送信テスト
-- ✅ Cloudflare Workersとの連携
+```
+go_home_timer/
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── schedule-notification/
+│   │   ├── page.tsx              # メインページ
+│   │   └── layout.tsx            # レイアウト
+│   └── lib/
+│       └── firebase.ts           # Firebase設定
+├── cloudflare-workers/
+│   ├── src/
+│   │   ├── index.ts              # メインWorker
+│   │   └── fcm.ts                # FCMサービス
+│   └── wrangler.toml             # Worker設定
+├── public/
+│   ├── manifest.json             # PWA manifest
+│   ├── icon.png                  # アプリアイコン
+│   └── firebase-messaging-sw.js  # Service Worker
+└── docs/
+    └── implementation_plan_front.md # 実装計画書
+```
 
-### 実装予定
-- ⏳ 通知時間の設定UI
-- ⏳ スケジュール通知（Cloudflare Queue使用）
-- ⏳ 通知履歴の管理
-- ⏳ カスタム通知メッセージ
+## 🎯 実装のポイント
+
+### 時間計算ロジック
+
+長針の位置を分単位に変換：
+- 1 → 5分
+- 2 → 10分
+- 3 → 15分
+- ...
+- 12 → 60分（0分）
+
+### スケジューリング
+
+1. フロントエンドで選択された時間を計算
+2. Next.js APIでCloudflare Workersに送信
+3. Cloudflare Queueでスケジューリング
+4. 指定時刻にFCMでプッシュ通知送信
+
+## 🔔 通知について
+
+- ブラウザの通知許可が必要
+- PWA対応によりホーム画面に追加可能
+- バックグラウンドでもプッシュ通知を受信
+
+## 🎨 デザインコンセプト
+
+- 子どもが直感的に理解できるUI
+- 明るく親しみやすい色使い
+- タッチしやすいボタンサイズ
+- アナログ時計による視覚的な時間理解
+
+## 📄 ライセンス
+
+MIT License
 

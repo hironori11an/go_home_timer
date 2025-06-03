@@ -1,8 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-messaging-compat.js');
 
-// Service Workerでは環境変数にアクセスできないため、
-// 設定はメインスレッドから渡される想定
+// Firebase設定
 const firebaseConfig = {
     apiKey: "AIzaSyCsHKEquFb9pCb4XChZG6bQ6EnGNArzzsI",
     authDomain: "go-home-timer.firebaseapp.com",
@@ -17,22 +16,23 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
+// バックグラウンドメッセージの処理
 messaging.onBackgroundMessage((payload) => {
   console.log('Received background message: ', payload);
 
-  const notificationTitle = payload.notification?.title || 'お知らせ';
+  const notificationTitle = payload.notification?.title || 'おうちタイマー';
   const notificationOptions = {
-    body: payload.notification?.body || '',
+    body: payload.notification?.body || 'お知らせがあります',
     icon: payload.notification?.icon || '/icon.png',
-    badge: payload.notification?.badge || '/badge.png',
+    badge: '/badge.png',
     data: payload.data || {},
     tag: 'go-home-timer-notification',
     requireInteraction: true,
-    // アクションボタンがある場合は追加
-    actions: payload.webpush?.notification?.actions || []
+    silent: false,
+    renotify: true
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // 通知クリック時の処理
@@ -41,28 +41,37 @@ self.addEventListener('notificationclick', function(event) {
   
   event.notification.close();
   
-  // アクションボタンがクリックされた場合
-  if (event.action) {
-    console.log('Action clicked:', event.action);
-    // 特定のアクションに応じた処理
-    if (event.action === 'go-home') {
-      // 帰宅アクションの処理
-      event.waitUntil(
-        clients.openWindow('/')
-      );
-    } else if (event.action === 'snooze') {
-      // スヌーズアクションの処理 - 何もしない（通知を閉じるだけ）
-      return;
-    }
-  } else {
-    // 通知本体がクリックされた場合、アプリを開く
-    event.waitUntil(
-      clients.matchAll().then(function(clientList) {
-        if (clientList.length > 0) {
-          return clientList[0].focus();
+  // アプリを開くまたはフォーカス
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then(function(clientList) {
+      // 既に開いているタブがあるかチェック
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
         }
+      }
+      // 新しいタブで開く
+      if (clients.openWindow) {
         return clients.openWindow('/');
-      })
-    );
-  }
+      }
+    }).catch(function(error) {
+      console.error('Error handling notification click:', error);
+    })
+  );
+});
+
+// Service Workerのインストール処理
+self.addEventListener('install', function(event) {
+  console.log('Firebase messaging service worker installing...');
+  self.skipWaiting();
+});
+
+// Service Workerのアクティベート処理
+self.addEventListener('activate', function(event) {
+  console.log('Firebase messaging service worker activating...');
+  event.waitUntil(self.clients.claim());
 });

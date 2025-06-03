@@ -1,10 +1,12 @@
-name = "fcm-web-push-worker"
+name = "fcm-web-push-worker-dev"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-[env.development]
-name = "fcm-web-push-worker-dev"
+[[queues.producers]]
+queue = "scheduled-notifications-dev"
+binding = "SCHEDULED_NOTIFICATIONS_QUEUE"
 
-[env.production]
-name = "fcm-web-push-worker-prod" 
+[[queues.consumers]]
+queue = "scheduled-notifications-dev"
+max_batch_size = 10 

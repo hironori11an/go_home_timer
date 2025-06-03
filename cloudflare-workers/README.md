@@ -42,146 +42,16 @@ FCM_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PR
 FCM_CLIENT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com"
 ```
 
-### 4. 開発サーバーの起動
+## Cloudflare Workersの設定
 
-```bash
-npm run dev
-```
 
-サーバーは `http://localhost:8787` で起動します。
+キューのコンシューマーバインディングを削除
+`wrangler queues consumer remove scheduled-notifications-dev fcm-web-push-worker-dev`
 
-### 5. デプロイ
+Workerの削除
+`wrangler delete --name fcm-web-push-worker-dev`
 
-```bash
-npm run deploy
-```
 
-**注意**: デプロイ前にCloudflare Workers ダッシュボードで環境変数を設定してください。
-
-## API エンドポイント
-
-### ヘルスチェック
-
-```
-GET /
-```
-
-サービスの稼働状況を確認します。
-
-### 単一通知送信
-
-```
-POST /send-notification
-```
-
-単一のプッシュ通知を送信します。
-
-**リクエストボディ:**
-
-```json
-{
-  "token": "FCM_DEVICE_TOKEN",
-  "title": "通知タイトル",
-  "body": "通知本文",
-  "icon": "/icon.png",
-  "badge": "/badge.png",
-  "data": {
-    "key1": "value1",
-    "key2": "value2"
-  },
-  "actions": [
-    {
-      "action": "action1",
-      "title": "アクション1",
-      "icon": "/action1.png"
-    }
-  ]
-}
-```
-
-### 一括通知送信
-
-```
-POST /send-notification-batch
-```
-
-複数のデバイストークンに一括でプッシュ通知を送信します。
-
-**リクエストボディ:**
-
-```json
-{
-  "tokens": ["token1", "token2", "token3"],
-  "title": "通知タイトル",
-  "body": "通知本文",
-  "icon": "/icon.png",
-  "badge": "/badge.png",
-  "data": {
-    "key1": "value1"
-  }
-}
-```
-
-### 帰宅時間通知
-
-```
-POST /send-go-home-notification
-```
-
-帰宅時間専用の通知を送信します。
-
-**リクエストボディ:**
-
-```json
-{
-  "token": "FCM_DEVICE_TOKEN",
-  "userName": "田中太郎",
-  "customMessage": "今日もお疲れ様でした！"
-}
-```
-
-## 使用例
-
-### cURL
-
-```bash
-# 単一通知
-curl -X POST http://localhost:8787/send-notification \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token": "YOUR_FCM_TOKEN",
-    "title": "テスト通知",
-    "body": "これはテスト通知です"
-  }'
-
-# 帰宅時間通知
-curl -X POST http://localhost:8787/send-go-home-notification \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token": "YOUR_FCM_TOKEN",
-    "userName": "田中太郎"
-  }'
-```
-
-### JavaScript (fetch)
-
-```javascript
-// 帰宅時間通知の送信
-const response = await fetch('https://your-worker.your-subdomain.workers.dev/send-go-home-notification', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    token: userFcmToken,
-    userName: '田中太郎',
-    customMessage: '今日もお疲れ様でした！ゆっくり休んでください。'
-  })
-});
-
-const result = await response.json();
-console.log(result);
-```
 
 ## CORS設定
 

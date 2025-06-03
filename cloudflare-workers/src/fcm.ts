@@ -32,9 +32,26 @@ export class FCMService {
   private clientEmail: string;
 
   constructor(bindings: Bindings) {
+    // 環境変数の検証
+    if (!bindings.FCM_PROJECT_ID) {
+      throw new Error('FCM_PROJECT_ID environment variable is not set');
+    }
+    if (!bindings.FCM_PRIVATE_KEY) {
+      throw new Error('FCM_PRIVATE_KEY environment variable is not set');
+    }
+    if (!bindings.FCM_CLIENT_EMAIL) {
+      throw new Error('FCM_CLIENT_EMAIL environment variable is not set');
+    }
+
     this.projectId = bindings.FCM_PROJECT_ID;
     this.privateKey = bindings.FCM_PRIVATE_KEY.replace(/\\n/g, '\n');
     this.clientEmail = bindings.FCM_CLIENT_EMAIL;
+    
+    console.log('FCM Service initialized:', {
+      projectId: this.projectId,
+      clientEmail: this.clientEmail,
+      privateKeyLength: this.privateKey.length
+    });
   }
 
   private async importPrivateKey(pem: string): Promise<CryptoKey> {

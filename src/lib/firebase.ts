@@ -32,31 +32,53 @@ export async function confirmNotification() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js`);
-    console.log('Service Worker registered with scope:', registration.scope);
-
+    // 通知許可をリクエスト
     const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPIDKEY,
-        serviceWorkerRegistration: registration,
+    if (permission !== 'granted') {
+      throw new Error('通知許可が拒否されました');
+    }
+
+    console.log('Notification permission granted.');
+
+    // Service Workerを登録
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+        scope: '/firebase-cloud-messaging-push-scope',
       });
+      console.log('Service Worker registered with scope:', registration.scope);
       
-      if (token) {
-        console.log('FCM Token:', token);
-        // フォアグラウンドメッセージハンドラーを設定
-        setupForegroundMessageHandler();
-        // TODO: FCMトークンをDBに保存する
-        return token;
-      }
-    } 
+      // Service Workerが有効になるまで待つ
+      await navigator.serviceWorker.ready;
+    } catch (swError) {
+      console.error('Service Worker registration failed:', swError);
+      throw new Error('Service Workerの登録に失敗しました');
+    }
+
+    // FCMトークンを取得
+    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+    if (!vapidKey) {
+      throw new Error('VAPID キーが設定されていません');
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+    
+    if (token) {
+      console.log('FCM Token:', token);
+      // フォアグラウンドメッセージハンドラーを設定
+      setupForegroundMessageHandler();
+      return token;
+    } else {
+      throw new Error('FCMトークンの取得に失敗しました');
+    }
+    
   } catch (error) {
-    console.error('Service Worker registration failed:', error);
+    console.error('Notification setup failed:', error);
     throw error;
   }
-  
-  return null;
 }
 
 // フォアグラウンドでのメッセージ受信処理
@@ -68,15 +90,24 @@ function setupForegroundMessageHandler() {
     
     // ページがアクティブな時は手動で通知を表示
     if (payload.notification) {
-      const notificationOptions = {
+      const notificationOptions: NotificationOptions = {
         body: payload.notification.body,
         icon: payload.notification.icon || '/icon.png',
-        badge: payload.notification.badge || '/badge.png',
         data: payload.data,
-        actions: payload.webpush?.notification?.actions || []
+        tag: 'go-home-timer',
+        requireInteraction: true,
       };
 
-      new Notification(payload.notification.title, notificationOptions);
+      const notification = new Notification(
+        payload.notification.title || 'お知らせ', 
+        notificationOptions
+      );
+
+      // 通知クリック時の処理
+      notification.onclick = () => {
+        notification.close();
+        window.focus();
+      };
     }
   });
 }
