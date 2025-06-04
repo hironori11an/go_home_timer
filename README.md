@@ -47,10 +47,6 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key
-
-# Cloudflare Workers Configuration
-CLOUDFLARE_WORKER_URL=https://your-worker.your-subdomain.workers.dev
-CLOUDFLARE_WORKER_TOKEN=your_worker_auth_token
 ```
 
 ### 3. フロントエンドの起動

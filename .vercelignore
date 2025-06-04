@@ -1,0 +1,9 @@
+# ディレクトリを無視
+cloudflare-workers/
+secrets/
+docs/
+.cursor/
+
+# ファイルを無視
+.DS_Store
+*.log

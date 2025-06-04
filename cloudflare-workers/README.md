@@ -42,6 +42,12 @@ FCM_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PR
 FCM_CLIENT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com"
 ```
 
+# secretの設定
+`wrangler secret put FCM_PROJECT_ID`
+`wrangler secret put FCM_PRIVATE_KEY`
+`wrangler secret put FCM_CLIENT_EMAIL`
+`wrangler secret put CORS_ORIGIN`
+
 ## Cloudflare Workersの設定
 
 

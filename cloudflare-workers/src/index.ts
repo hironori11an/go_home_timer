@@ -79,11 +79,14 @@ async function sendNotificationInternal(
 const app = new Hono<{ Bindings: ExtendedBindings }>();
 
 // CORS設定
-app.use('*', cors({
-  origin: ['http://localhost:3000', 'https://your-frontend-domain.vercel.app'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use('*', (c, next) => {
+  const corsOrigin = c.env.CORS_ORIGIN;
+  return cors({
+    origin: ['http://localhost:3000', corsOrigin],
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  })(c, next);
+});
 
 // ヘルスチェック
 app.get('/', (c) => {

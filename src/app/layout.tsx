@@ -1,15 +1,19 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap", 
+  fallback: ["monospace"],
 });
 
 export const metadata: Metadata = {
@@ -17,8 +21,6 @@ export const metadata: Metadata = {
   description: "長い針がここまで来たらおうちに帰ろうね！子ども向けの可愛いタイマーアプリです。",
   keywords: ["タイマー", "子ども", "帰宅", "アナログ時計", "PWA"],
   manifest: "/manifest.json",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -34,6 +36,14 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "default",
     "msapplication-TileColor": "#2563eb",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({
@@ -52,10 +62,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="おうちタイマー" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#2563eb" />
-        <meta name="theme-color" content="#2563eb" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
       >
         {children}
       </body>
