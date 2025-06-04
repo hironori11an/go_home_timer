@@ -1,39 +1,50 @@
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.10.0/firebase-messaging-compat.js');
 
-// Firebase設定
-const firebaseConfig = {
-    apiKey: "AIzaSyCsHKEquFb9pCb4XChZG6bQ6EnGNArzzsI",
-    authDomain: "go-home-timer.firebaseapp.com",
-    projectId: "go-home-timer",
-    storageBucket: "go-home-timer.firebasestorage.app",
-    messagingSenderId: "984901580554",
-    appId: "1:984901580554:web:ffb1826329963539866cf3",
-    measurementId: "G-LH2J4NJG2Q"
-};
+// Firebase設定を動的に取得
+let firebaseConfig = null;
+let messaging = null;
 
-firebase.initializeApp(firebaseConfig);
+// 設定を取得してFirebaseを初期化
+async function initializeFirebase() {
+  try {
+    // 設定をAPIから取得
+    const response = await fetch('/api/firebase-config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Firebase config');
+    }
+    firebaseConfig = await response.json();
+    
+    firebase.initializeApp(firebaseConfig);
+    messaging = firebase.messaging();
+    
+    // バックグラウンドメッセージの処理を設定
+    messaging.onBackgroundMessage((payload) => {
+      console.log('Received background message: ', payload);
 
-const messaging = firebase.messaging();
+      const notificationTitle = payload.notification?.title || 'おうちタイマー';
+      const notificationOptions = {
+        body: payload.notification?.body || 'お知らせがあります',
+        icon: payload.notification?.icon || '/icon.png',
+        badge: '/badge.png',
+        data: payload.data || {},
+        tag: 'go-home-timer-notification',
+        requireInteraction: true,
+        silent: false,
+        renotify: true
+      };
 
-// バックグラウンドメッセージの処理
-messaging.onBackgroundMessage((payload) => {
-  console.log('Received background message: ', payload);
+      return self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+    
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error);
+  }
+}
 
-  const notificationTitle = payload.notification?.title || 'おうちタイマー';
-  const notificationOptions = {
-    body: payload.notification?.body || 'お知らせがあります',
-    icon: payload.notification?.icon || '/icon.png',
-    badge: '/badge.png',
-    data: payload.data || {},
-    tag: 'go-home-timer-notification',
-    requireInteraction: true,
-    silent: false,
-    renotify: true
-  };
-
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
+// Service Workerの初期化時にFirebaseを設定
+initializeFirebase();
 
 // 通知クリック時の処理
 self.addEventListener('notificationclick', function(event) {
@@ -65,7 +76,7 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 // Service Workerのインストール処理
-self.addEventListener('install', function(event) {
+self.addEventListener('install', function() {
   console.log('Firebase messaging service worker installing...');
   self.skipWaiting();
 });
@@ -74,4 +85,4 @@ self.addEventListener('install', function(event) {
 self.addEventListener('activate', function(event) {
   console.log('Firebase messaging service worker activating...');
   event.waitUntil(self.clients.claim());
-});
+}); 
