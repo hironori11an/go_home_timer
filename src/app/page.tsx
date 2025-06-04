@@ -9,7 +9,6 @@ export default function Home() {
   const [isTimerSet, setIsTimerSet] = useState(false);
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'loading' | 'success' | 'error' | 'unsupported'>('loading');
-  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // 現在時刻を1秒ごとに更新
   useEffect(() => {
@@ -31,12 +30,10 @@ export default function Home() {
           setNotificationStatus('success');
         } else {
           setNotificationStatus('unsupported');
-          setErrorMessage('ブラウザが通知をサポートしていないか、権限が拒否されました');
         }
       } catch (error) {
         console.error('Notification initialization error:', error);
         setNotificationStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : '通知の初期化に失敗しました');
       }
     };
     
@@ -82,34 +79,6 @@ export default function Home() {
   const resetTimer = () => {
     setIsTimerSet(false);
     setSelectedHour(null);
-  };
-
-  const sendTestNotification = async () => {
-    if (!fcmToken) {
-      alert('FCMトークンが取得されていません');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/test-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: fcmToken,
-          icon: '/icon.png',
-          badge: '/badge.png'
-        })
-      });
-
-      const result = await response.json();
-      console.log('Test notification result:', result);
-      alert('テスト通知を送信しました。コンソールを確認してください。');
-    } catch (error) {
-      console.error('Test notification error:', error);
-      alert('テスト通知の送信に失敗しました');
-    }
   };
 
   return (
@@ -286,34 +255,6 @@ export default function Home() {
             </p>
           </div>
         )}
-
-        {/* プッシュ通知テストセクション */}
-        <div className="border border-gray-300 rounded-lg p-6 w-full max-w-md mt-8">
-          <h2 className="text-xl font-semibold mb-4">プッシュ通知テスト</h2>
-          {notificationStatus === 'loading' && (
-            <p className="text-sm text-blue-600">⏳ FCMトークンを取得中...</p>
-          )}
-          {notificationStatus === 'success' && fcmToken && (
-            <div>
-              <p className="text-sm text-green-600 mb-4">✅ FCMトークン取得済み</p>
-              <p className="text-xs text-gray-500 mb-4 break-all">
-                Token: {fcmToken.substring(0, 20)}...
-              </p>
-              <button
-                onClick={sendTestNotification}
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                テスト通知を送信
-              </button>
-            </div>
-          )}
-          {(notificationStatus === 'error' || notificationStatus === 'unsupported') && (
-            <div>
-              <p className="text-sm text-red-600 mb-2">❌ 通知の設定に問題があります</p>
-              <p className="text-xs text-gray-600">{errorMessage}</p>
-            </div>
-          )}
-        </div>
 
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2 tracking-[-.01em]">

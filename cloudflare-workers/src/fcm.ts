@@ -24,12 +24,14 @@ export interface Bindings {
   FCM_PROJECT_ID: string;
   FCM_PRIVATE_KEY: string;
   FCM_CLIENT_EMAIL: string;
+  CORS_ORIGIN: string;
 }
 
 export class FCMService {
   private projectId: string;
   private privateKey: string;
   private clientEmail: string;
+  private corsOrigin: string;
 
   constructor(bindings: Bindings) {
     // 環境変数の検証
@@ -46,11 +48,13 @@ export class FCMService {
     this.projectId = bindings.FCM_PROJECT_ID;
     this.privateKey = bindings.FCM_PRIVATE_KEY.replace(/\\n/g, '\n');
     this.clientEmail = bindings.FCM_CLIENT_EMAIL;
+    this.corsOrigin = bindings.CORS_ORIGIN;
     
     console.log('FCM Service initialized:', {
       projectId: this.projectId,
       clientEmail: this.clientEmail,
-      privateKeyLength: this.privateKey.length
+      privateKeyLength: this.privateKey.length,
+      corsOrigin: this.corsOrigin,
     });
   }
 
