@@ -67,7 +67,6 @@ export async function confirmNotification() {
     });
     
     if (token) {
-      console.log('FCM Token:', token);
       // フォアグラウンドメッセージハンドラーを設定
       setupForegroundMessageHandler();
       return token;
