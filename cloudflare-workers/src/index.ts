@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { FCMService, type Bindings, type FCMMessage } from './fcm';
+import type { Context, Next } from 'hono';
 
 // 拡張されたBindings型
 interface ExtendedBindings extends Bindings {
   SCHEDULED_NOTIFICATIONS_QUEUE: Queue;
   CF_WORKER_DOMAIN?: string;
+  API_KEY: string; // APIキー認証用
 }
 
 // スケジュールされた通知のデータ型
@@ -78,15 +80,36 @@ async function sendNotificationInternal(
 
 const app = new Hono<{ Bindings: ExtendedBindings }>();
 
+// APIキー認証ミドルウェア
+const apiKeyAuth = async (c: Context<{ Bindings: ExtendedBindings }>, next: Next) => {
+  // POSTリクエストのみ認証を要求
+  if (c.req.method === 'POST') {
+    const apiKey = c.req.header('X-API-Key') || c.req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!apiKey) {
+      return c.json({ error: 'APIキーが必要です' }, 401);
+    }
+    
+    if (apiKey !== c.env.API_KEY) {
+      return c.json({ error: '無効なAPIキーです' }, 401);
+    }
+  }
+  
+  await next();
+};
+
 // CORS設定
 app.use('*', (c, next) => {
   const corsOrigin = c.env.CORS_ORIGIN;
   return cors({
     origin: [corsOrigin],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'], // X-API-Keyヘッダーを許可
   })(c, next);
 });
+
+// APIキー認証ミドルウェアを適用
+app.use('*', apiKeyAuth);
 
 // ヘルスチェック
 app.get('/', (c) => {

@@ -47,6 +47,7 @@ FCM_CLIENT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com"
 `wrangler secret put FCM_PRIVATE_KEY`
 `wrangler secret put FCM_CLIENT_EMAIL`
 `wrangler secret put CORS_ORIGIN`
+`wrangler secret put API_KEY`
 
 ## Cloudflare Workersの設定
 

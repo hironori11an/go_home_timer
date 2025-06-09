@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-Key': process.env.CLOUDFLARE_WORKER_API_KEY || '',
       },
       body: JSON.stringify({
         fcmToken: token,
