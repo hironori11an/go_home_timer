@@ -144,7 +144,7 @@ app.post('/schedule', async (c) => {
 });
 
 // Cloudflare Workers queue consumer
-export default {
+const worker = {
   async fetch(request: Request, env: ExtendedBindings, ctx: ExecutionContext): Promise<Response> {
     return app.fetch(request, env, ctx);
   },
@@ -176,4 +176,6 @@ export default {
       }
     }
   }
-}; 
+};
+
+export default worker; 
