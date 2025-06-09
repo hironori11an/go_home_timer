@@ -82,7 +82,7 @@ const app = new Hono<{ Bindings: ExtendedBindings }>();
 app.use('*', (c, next) => {
   const corsOrigin = c.env.CORS_ORIGIN;
   return cors({
-    origin: ['http://localhost:3000', corsOrigin],
+    origin: [corsOrigin],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   })(c, next);
@@ -138,35 +138,6 @@ app.post('/schedule', async (c) => {
     console.error('Error scheduling notification:', error);
     return c.json(
       { error: 'スケジュール設定でエラーが発生しました' }, 
-      500
-    );
-  }
-});
-
-// 特定のデバイスをターゲットに通知を送信
-app.post('/send-notification', async (c) => {
-  try {
-    const body = await c.req.json() as {
-      token: string;
-      title?: string;
-      body?: string;
-      icon?: string;
-      badge?: string;
-      data?: Record<string, string>;
-      actions?: Array<{
-        action: string;
-        title: string;
-        icon?: string;
-      }>;
-    };
-
-    const result = await sendNotificationInternal(c.env, body);
-    return c.json(result);
-
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    return c.json(
-      { error: error instanceof Error ? error.message : 'サーバーエラーが発生しました' }, 
       500
     );
   }

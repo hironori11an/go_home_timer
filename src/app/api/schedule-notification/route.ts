@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cloudflare Workers の /schedule エンドポイントを呼び出す
-    const cloudflareWorkerUrl = 'https://fcm-web-push-worker-dev.hironori11an.workers.dev';
+    const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
     
     const workerResponse = await fetch(`${cloudflareWorkerUrl}/schedule`, {
       method: 'POST',
