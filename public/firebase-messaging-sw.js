@@ -18,6 +18,50 @@ function isAndroidChrome() {
   return isAndroid && isChrome;
 }
 
+// 長めのバイブレーションパターンを生成
+function getLongVibrationPattern() {
+  // より長く、気づきやすいバイブレーションパターン
+  // [振動時間, 停止時間, 振動時間, 停止時間, ...]
+  return [
+    500, 200,  // 0.5秒振動、0.2秒停止
+    500, 200,  // 0.5秒振動、0.2秒停止  
+    500, 200,  // 0.5秒振動、0.2秒停止
+    300, 100,  // 0.3秒振動、0.1秒停止
+    300, 100,  // 0.3秒振動、0.1秒停止
+    700        // 最後に0.7秒の長い振動
+  ];
+}
+
+// 通知オプションを生成する関数
+function createNotificationOptions(payload) {
+  const body = payload.notification?.body || payload.body || 'お知らせがあります';
+  
+  return {
+    body: body,
+    icon: payload.notification?.icon || payload.icon || '/icon.png',
+    badge: '/badge.png',
+    data: payload.data || payload,
+    tag: 'go-home-timer-notification',
+    requireInteraction: true,
+    silent: false,  // 通知音を鳴らす
+    renotify: true, // 同じtagでも再通知する
+    vibrate: getLongVibrationPattern(), // 長いバイブレーション
+    // Android固有の設定
+    ...(isAndroidChrome() && {
+      actions: [
+        {
+          action: 'open',
+          title: 'アプリを開く',
+          icon: '/icon.png'
+        }
+      ],
+      // 通知の重要度を高く設定
+      priority: 'high',
+      visibility: 'public'
+    })
+  };
+}
+
 // 設定を取得してFirebaseを初期化
 async function initializeFirebase() {
   try {
@@ -42,18 +86,7 @@ async function initializeFirebase() {
       console.log('Service Worker - Received background message:', payload);
 
       const notificationTitle = payload.notification?.title || 'おうちタイマー';
-      const notificationOptions = {
-        body: payload.notification?.body || 'お知らせがあります',
-        icon: payload.notification?.icon || '/icon.png',
-        badge: '/badge.png',
-        data: payload.data || {},
-        tag: 'go-home-timer-notification',
-        requireInteraction: true,
-        silent: false,
-        renotify: true,
-        // Android Chrome 向けの追加オプション
-        vibrate: isAndroidChrome() ? [200, 100, 200, 100, 200] : [200, 100, 200]
-      };
+      const notificationOptions = createNotificationOptions(payload);
 
       console.log('Service Worker - Showing notification with options:', notificationOptions);
       return self.registration.showNotification(notificationTitle, notificationOptions);
@@ -88,17 +121,7 @@ self.addEventListener('push', function(event) {
     console.log('Service Worker - Push payload:', payload);
     
     const notificationTitle = payload.notification?.title || payload.title || 'おうちタイマー';
-    const notificationOptions = {
-      body: payload.notification?.body || payload.body || 'お知らせがあります',
-      icon: payload.notification?.icon || payload.icon || '/icon.png',
-      badge: '/badge.png',
-      data: payload.data || payload,
-      tag: 'go-home-timer-notification',
-      requireInteraction: true,
-      silent: false,
-      renotify: true,
-      vibrate: isAndroidChrome() ? [200, 100, 200, 100, 200] : [200, 100, 200]
-    };
+    const notificationOptions = createNotificationOptions(payload);
 
     console.log('Service Worker - Push event: showing notification with options:', notificationOptions);
     
@@ -115,7 +138,8 @@ self.addEventListener('push', function(event) {
       badge: '/badge.png',
       tag: 'go-home-timer-notification',
       requireInteraction: true,
-      vibrate: isAndroidChrome() ? [200, 100, 200, 100, 200] : [200, 100, 200]
+      silent: false,  // 通知音を鳴らす
+      vibrate: getLongVibrationPattern() // 長いバイブレーション
     };
     
     console.log('Service Worker - Showing default notification due to parse error');
@@ -129,8 +153,21 @@ self.addEventListener('push', function(event) {
 // 通知クリック時の処理
 self.addEventListener('notificationclick', function(event) {
   console.log('Notification clicked:', event);
+  console.log('Action:', event.action);
   
   event.notification.close();
+  
+  // アクション別の処理
+  if (event.action === 'open') {
+    console.log('Open action clicked');
+  } else {
+    console.log('Default notification click');
+  }
+  
+  // バイブレーション（可能な場合）
+  if ('vibrate' in navigator) {
+    navigator.vibrate([100, 50, 100]); // クリック時の短いバイブレーション
+  }
   
   // アプリを開くまたはフォーカス
   event.waitUntil(
@@ -142,11 +179,13 @@ self.addEventListener('notificationclick', function(event) {
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
         if (client.url.includes(self.location.origin) && 'focus' in client) {
+          console.log('Focusing existing tab');
           return client.focus();
         }
       }
       // 新しいタブで開く
       if (clients.openWindow) {
+        console.log('Opening new tab');
         return clients.openWindow('/');
       }
     }).catch(function(error) {
@@ -158,6 +197,7 @@ self.addEventListener('notificationclick', function(event) {
 // 通知が閉じられた時の処理（オプション）
 self.addEventListener('notificationclose', function(event) {
   console.log('Notification closed:', event.notification.tag);
+  console.log('Close reason:', event.reason || 'user');
 });
 
 // Service Workerのインストール処理

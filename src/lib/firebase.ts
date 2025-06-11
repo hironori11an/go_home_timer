@@ -120,18 +120,37 @@ export async function confirmNotification() {
 function setupForegroundMessageHandler() {
   if (!messaging) return;
   
+  // 長めのバイブレーションパターンを生成
+  const getLongVibrationPattern = () => {
+    // より長く、気づきやすいバイブレーションパターン
+    return [
+      500, 200,  // 0.5秒振動、0.2秒停止
+      500, 200,  // 0.5秒振動、0.2秒停止  
+      500, 200,  // 0.5秒振動、0.2秒停止
+      300, 100,  // 0.3秒振動、0.1秒停止
+      300, 100,  // 0.3秒振動、0.1秒停止
+      700        // 最後に0.7秒の長い振動
+    ];
+  };
+  
   onMessage(messaging, (payload) => {
     console.log('Foreground message received:', payload);
     
     // ページがアクティブな時は手動で通知を表示
     if (payload.notification) {
-      const notificationOptions: NotificationOptions = {
+      const notificationOptions = {
         body: payload.notification.body,
         icon: payload.notification.icon || '/icon.png',
         data: payload.data,
         tag: 'go-home-timer',
         requireInteraction: true,
-      };
+        silent: false,  // 通知音を鳴らす
+        renotify: true, // 同じtagでも再通知する
+        vibrate: getLongVibrationPattern(), // 長いバイブレーション
+        badge: '/badge.png'
+      } as NotificationOptions;
+
+      console.log('Foreground notification options:', notificationOptions);
 
       const notification = new Notification(
         payload.notification.title || 'お知らせ', 
@@ -142,7 +161,16 @@ function setupForegroundMessageHandler() {
       notification.onclick = () => {
         notification.close();
         window.focus();
+        // 追加のバイブレーション（クリック時）
+        if ('vibrate' in navigator) {
+          navigator.vibrate([100, 50, 100]);
+        }
       };
+      
+      // 通知表示時に追加のバイブレーション（ブラウザAPIを直接使用）
+      if ('vibrate' in navigator) {
+        navigator.vibrate(getLongVibrationPattern());
+      }
     }
   });
 }
