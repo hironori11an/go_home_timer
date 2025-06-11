@@ -46,6 +46,53 @@ async function initializeFirebase() {
 // Service Workerの初期化時にFirebaseを設定
 initializeFirebase();
 
+// 標準的なPUSHイベントリスナー（FCMとは独立して動作）
+self.addEventListener('push', function(event) {
+  console.log('Push event received:', event);
+  
+  if (!event.data) {
+    console.log('Push event has no data');
+    return;
+  }
+
+  try {
+    const payload = event.data.json();
+    console.log('Push payload:', payload);
+    
+    const notificationTitle = payload.notification?.title || payload.title || 'おうちタイマー';
+    const notificationOptions = {
+      body: payload.notification?.body || payload.body || 'お知らせがあります',
+      icon: payload.notification?.icon || payload.icon || '/icon.png',
+      badge: '/badge.png',
+      data: payload.data || payload,
+      tag: 'go-home-timer-notification',
+      requireInteraction: true,
+      silent: false,
+      renotify: true,
+      vibrate: [200, 100, 200]
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(notificationTitle, notificationOptions)
+    );
+  } catch (error) {
+    console.error('Error parsing push data:', error);
+    
+    // パースエラーの場合はデフォルト通知を表示
+    const defaultOptions = {
+      body: 'お知らせがあります',
+      icon: '/icon.png',
+      badge: '/badge.png',
+      tag: 'go-home-timer-notification',
+      requireInteraction: true
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification('おうちタイマー', defaultOptions)
+    );
+  }
+});
+
 // 通知クリック時の処理
 self.addEventListener('notificationclick', function(event) {
   console.log('Notification clicked:', event);
@@ -73,6 +120,11 @@ self.addEventListener('notificationclick', function(event) {
       console.error('Error handling notification click:', error);
     })
   );
+});
+
+// 通知が閉じられた時の処理（オプション）
+self.addEventListener('notificationclose', function(event) {
+  console.log('Notification closed:', event.notification.tag);
 });
 
 // Service Workerのインストール処理
