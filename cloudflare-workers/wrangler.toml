@@ -10,3 +10,6 @@ binding = "SCHEDULED_NOTIFICATIONS_QUEUE"
 [[queues.consumers]]
 queue = "scheduled-notifications-dev"
 max_batch_size = 10 
+
+[observability.logs]
+enabled = true
