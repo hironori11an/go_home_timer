@@ -9,6 +9,8 @@ export default function Home() {
   const [isTimerSet, setIsTimerSet] = useState(false);
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'loading' | 'success' | 'error' | 'unsupported'>('loading');
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [showDebug, setShowDebug] = useState(false);
 
   // 現在時刻を1秒ごとに更新
   useEffect(() => {
@@ -24,16 +26,22 @@ export default function Home() {
     const initNotification = async () => {
       try {
         setNotificationStatus('loading');
+        setDebugInfo('通知の初期化を開始...');
+        
         const token = await confirmNotification();
         if (token) {
           setFcmToken(token);
           setNotificationStatus('success');
+          setDebugInfo(`トークン取得成功 (長さ: ${token.length})`);
         } else {
           setNotificationStatus('unsupported');
+          setDebugInfo('このブラウザは通知をサポートしていません');
         }
       } catch (error) {
         console.error('Notification initialization error:', error);
         setNotificationStatus('error');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setDebugInfo(`エラー: ${errorMessage}`);
       }
     };
     
@@ -79,6 +87,38 @@ export default function Home() {
   const resetTimer = () => {
     setIsTimerSet(false);
     setSelectedHour(null);
+  };
+
+  // デバッグ用：テスト通知送信
+  const sendTestNotification = async () => {
+    if (!fcmToken) {
+      alert('FCMトークンが取得されていません');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/schedule-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: fcmToken,
+          targetHour: new Date().getHours() + 1, // 1時間後
+          isTest: true
+        })
+      });
+
+      if (response.ok) {
+        alert('テスト通知を送信しました');
+      } else {
+        const errorText = await response.text();
+        alert(`テスト通知の送信に失敗しました: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Test notification error:', error);
+      alert(`テスト通知エラー: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   return (
@@ -248,51 +288,72 @@ export default function Home() {
         {/* 通知ステータス */}
         {notificationStatus !== 'success' && (
           <div className="mt-4 p-4 bg-yellow-100 rounded-lg">
-            <p className="text-sm text-yellow-700 text-center">
+            <p className="text-sm text-yellow-700 text-center mb-2">
               {notificationStatus === 'loading' && '通知の準備をしています...'}
               {notificationStatus === 'error' && '通知の設定でエラーが発生しました'}
               {notificationStatus === 'unsupported' && 'このブラウザは通知をサポートしていません'}
             </p>
+            
+            {/* デバッグ情報 */}
+            <div className="mt-2">
+              <button 
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-xs text-blue-600 underline"
+              >
+                {showDebug ? '詳細を隠す' : '詳細を表示'}
+              </button>
+              
+              {showDebug && (
+                <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                  <div>ブラウザ: {typeof window !== 'undefined' ? navigator.userAgent : 'N/A'}</div>
+                  <div>状態: {notificationStatus}</div>
+                  <div>詳細: {debugInfo}</div>
+                  <div>Service Worker対応: {'serviceWorker' in navigator ? 'Yes' : 'No'}</div>
+                  <div>通知API対応: {'Notification' in window ? 'Yes' : 'No'}</div>
+                  <div>通知許可: {typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'N/A'}</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        {/* デバッグ用：成功時も小さく情報表示 */}
+        {notificationStatus === 'success' && showDebug && (
+          <div className="mt-4 p-2 bg-green-50 rounded-lg">
+            <div className="text-xs text-green-600">
+              <div>✅ 通知設定完了</div>
+              <div>トークン: {fcmToken ? `${fcmToken.substring(0, 20)}...` : 'なし'}</div>
+            </div>
+          </div>
+        )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        {/* 開発者用デバッグボタン（常に表示） */}
+        <div className="mt-4 text-center">
+          <button 
+            onClick={() => {
+              setShowDebug(!showDebug);
+              // コンソールにも詳細情報を出力
+              console.log('=== Current State ===');
+              console.log('notificationStatus:', notificationStatus);
+              console.log('fcmToken:', fcmToken ? `${fcmToken.substring(0, 50)}...` : null);
+              console.log('debugInfo:', debugInfo);
+              console.log('userAgent:', navigator.userAgent);
+              console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
+            }}
+            className="text-xs text-gray-400 hover:text-gray-600 mr-4"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            🐛 Debug
+          </button>
+          
+          {/* テスト通知ボタン */}
+          {fcmToken && (
+            <button 
+              onClick={sendTestNotification}
+              className="text-xs text-blue-400 hover:text-blue-600"
+            >
+              🔔 テスト通知
+            </button>
+          )}
         </div>
       </div>
     </div>
