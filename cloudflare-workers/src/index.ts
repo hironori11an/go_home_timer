@@ -6,8 +6,8 @@ import type { Context, Next } from 'hono';
 // 拡張されたBindings型
 interface ExtendedBindings extends Bindings {
   SCHEDULED_NOTIFICATIONS_QUEUE: Queue;
-  CF_WORKER_DOMAIN?: string;
   API_KEY: string; // APIキー認証用
+  APP_ENV?: string;
 }
 
 // スケジュールされた通知のデータ型
@@ -145,8 +145,9 @@ app.post('/schedule', async (c) => {
     // Queueに通知データを送信（遅延実行）
     const delayMs = scheduledTime.getTime() - now.getTime();
     
+    // dev環境では15秒遅延
     await c.env.SCHEDULED_NOTIFICATIONS_QUEUE.send(body, {
-      delaySeconds: Math.floor(delayMs / 1000)
+      delaySeconds: c.env.APP_ENV === 'dev' ? 15 : Math.floor(delayMs / 1000)
     });
 
     return c.json({

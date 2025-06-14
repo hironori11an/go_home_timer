@@ -18,20 +18,6 @@ function isAndroidChrome() {
   return isAndroid && isChrome;
 }
 
-// 長めのバイブレーションパターンを生成
-function getLongVibrationPattern() {
-  // より長く、気づきやすいバイブレーションパターン
-  // [振動時間, 停止時間, 振動時間, 停止時間, ...]
-  return [
-    500, 200,  // 0.5秒振動、0.2秒停止
-    500, 200,  // 0.5秒振動、0.2秒停止  
-    500, 200,  // 0.5秒振動、0.2秒停止
-    300, 100,  // 0.3秒振動、0.1秒停止
-    300, 100,  // 0.3秒振動、0.1秒停止
-    700        // 最後に0.7秒の長い振動
-  ];
-}
-
 // 通知オプションを生成する関数
 function createNotificationOptions(payload) {
   const body = payload.notification?.body || payload.body || 'お知らせがあります';
@@ -45,7 +31,6 @@ function createNotificationOptions(payload) {
     requireInteraction: true,
     silent: false,  // 通知音を鳴らす
     renotify: true, // 同じtagでも再通知する
-    vibrate: getLongVibrationPattern(), // 長いバイブレーション
     // Android固有の設定
     ...(isAndroidChrome() && {
       actions: [
@@ -138,8 +123,7 @@ self.addEventListener('push', function(event) {
       badge: '/badge.png',
       tag: 'go-home-timer-notification',
       requireInteraction: true,
-      silent: false,  // 通知音を鳴らす
-      vibrate: getLongVibrationPattern() // 長いバイブレーション
+      silent: false  // 通知音を鳴らす
     };
     
     console.log('Service Worker - Showing default notification due to parse error');
@@ -162,11 +146,6 @@ self.addEventListener('notificationclick', function(event) {
     console.log('Open action clicked');
   } else {
     console.log('Default notification click');
-  }
-  
-  // バイブレーション（可能な場合）
-  if ('vibrate' in navigator) {
-    navigator.vibrate([100, 50, 100]); // クリック時の短いバイブレーション
   }
   
   // アプリを開くまたはフォーカス
