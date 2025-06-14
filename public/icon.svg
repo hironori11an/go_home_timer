@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- 外側の円（グレー） -->
+  <circle cx="256" cy="256" r="240" fill="#6b7280" stroke="#4b5563" stroke-width="8"/>
+  
+  <!-- 内側の円（白） -->
+  <circle cx="256" cy="256" r="220" fill="white"/>
+  
+  <!-- 「帰」の文字（黒） -->
+  <text x="256" y="340" 
+        font-family="'Rounded M+ 1c', 'Kosugi Maru', 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'rounded', cursive, sans-serif" 
+        font-size="260" 
+        font-weight="800" 
+        text-anchor="middle" 
+        fill="black">帰</text>
+</svg> 
