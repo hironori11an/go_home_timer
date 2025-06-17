@@ -296,11 +296,10 @@ export default function Home() {
         </div>
 
         {/* タイマー状態に応じた表示 */}
-        <div className="min-h-[200px] flex flex-col justify-center">
+        <div className="min-h-[160px] flex flex-col justify-start">
         {isTimerSet ? (
           /* タイマー設定完了時の表示 */
           <div className="text-center">
-            <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-xl font-bold mb-4 text-green-600">
               タイマーをセットしたよ！
             </h2>
