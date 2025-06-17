@@ -197,16 +197,21 @@ export default function Home() {
             !isTimerSet ? 'cursor-pointer hover:shadow-3xl hover:scale-105' : ''
           }`}
           onClick={handleClockClick}
+          style={{
+            '--clock-radius': '120px',
+            '--mark-radius': '100px'
+          } as React.CSSProperties & {
+            '--clock-radius': string;
+            '--mark-radius': string;
+          }}
         >
-          <div className="w-96 h-96 sm:w-[420px] sm:h-[420px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] mx-auto relative">
+          <div className="w-96 h-96 sm:w-[420px] sm:h-[420px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] mx-auto relative [--clock-radius:120px] [--mark-radius:100px] sm:[--clock-radius:130px] sm:[--mark-radius:110px] md:[--clock-radius:85px] md:[--mark-radius:70px] lg:[--clock-radius:100px] lg:[--mark-radius:80px]">
             {/* 時計の文字盤 */}
             <div className="absolute inset-0 rounded-full border-4 border-gray-300 bg-white">
               {/* 時間の数字 - より大きく */}
               {[...Array(12)].map((_, i) => {
                 const hour = i + 1;
                 const angle = (hour * 30) - 90; // -90度で12時を上に
-                const x = Math.cos(angle * Math.PI / 180) * (window.innerWidth >= 1024 ? 100 : window.innerWidth >= 768 ? 85 : 120); // レスポンシブ対応
-                const y = Math.sin(angle * Math.PI / 180) * (window.innerWidth >= 1024 ? 100 : window.innerWidth >= 768 ? 85 : 120);
                 const isSelected = selectedHour === hour;
                 
                 return (
@@ -218,8 +223,8 @@ export default function Home() {
                         : 'text-gray-700 hover:text-blue-500'
                     }`}
                     style={{
-                      left: `calc(50% + ${x}px - 15px)`,
-                      top: `calc(50% + ${y}px - 15px)`,
+                      left: `calc(50% + ${Math.cos(angle * Math.PI / 180)} * var(--clock-radius) - 15px)`,
+                      top: `calc(50% + ${Math.sin(angle * Math.PI / 180)} * var(--clock-radius) - 15px)`,
                       width: '30px',
                       height: '30px',
                       display: 'flex',
@@ -269,8 +274,8 @@ export default function Home() {
                 <div
                   className="absolute bg-red-400 rounded-full w-5 h-5 animate-pulse"
                   style={{
-                    left: `calc(50% + ${Math.cos(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * (window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 70 : 100)}px - 10px)`,
-                    top: `calc(50% + ${Math.sin(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * (window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 70 : 100)}px - 10px)`
+                    left: `calc(50% + ${Math.cos(((selectedHour * 5 * 6) - 90) * Math.PI / 180)} * var(--mark-radius) - 10px)`,
+                    top: `calc(50% + ${Math.sin(((selectedHour * 5 * 6) - 90) * Math.PI / 180)} * var(--mark-radius) - 10px)`
                   }}
                 />
               )}
@@ -402,8 +407,8 @@ export default function Home() {
                 <div>ブラウザ: {typeof window !== 'undefined' ? navigator.userAgent : 'N/A'}</div>
                 <div>状態: {notificationStatus}</div>
                 <div>詳細: {debugInfo}</div>
-                <div>Service Worker対応: {'serviceWorker' in navigator ? 'Yes' : 'No'}</div>
-                <div>通知API対応: {'Notification' in window ? 'Yes' : 'No'}</div>
+                <div>Service Worker対応: {typeof window !== 'undefined' && 'serviceWorker' in navigator ? 'Yes' : 'No'}</div>
+                <div>通知API対応: {typeof window !== 'undefined' && 'Notification' in window ? 'Yes' : 'No'}</div>
                 <div>通知許可: {typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'N/A'}</div>
               </div>
             )}
@@ -431,8 +436,10 @@ export default function Home() {
             console.log('notificationStatus:', notificationStatus);
             console.log('fcmToken:', fcmToken ? `${fcmToken.substring(0, 50)}...` : null);
             console.log('debugInfo:', debugInfo);
-            console.log('userAgent:', navigator.userAgent);
-            console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
+            if (typeof window !== 'undefined') {
+              console.log('userAgent:', navigator.userAgent);
+              console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
+            }
           }}
           className="text-xs text-gray-400 hover:text-gray-600 mr-4 bg-white bg-opacity-50 px-2 py-1 rounded"
         >
