@@ -144,65 +144,84 @@ export default function Home() {
     }
   };
 
+  // アナログ時計上でのクリック/タッチ処理
+  const handleClockClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (isTimerSet) return; // タイマー設定済みの場合は無効
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const clickX = event.clientX - centerX;
+    const clickY = event.clientY - centerY;
+    
+    // 角度計算（12時方向を0度とする）
+    let angle = Math.atan2(clickY, clickX) * (180 / Math.PI);
+    angle = (angle + 90) % 360; // 12時方向を0度に調整
+    if (angle < 0) angle += 360;
+    
+    // 角度から対応する数字を計算（1-12）
+    const hour = Math.round(angle / 30) || 12; // 0度の場合は12時
+    const finalHour = hour > 12 ? hour - 12 : hour;
+    
+    setSelectedHour(finalHour);
+    
+    // 視覚的フィードバック
+    const clockElement = event.currentTarget;
+    clockElement.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+      clockElement.style.transform = 'scale(1)';
+    }, 100);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-yellow-100 p-4">
-      <div className="max-w-md mx-auto">
-        {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600 mb-2">🏠 おうちタイマー</h1>
-          <p className="text-gray-600">長い針がここまで来たらおうちに帰ろうね！</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-yellow-100 relative overflow-hidden">
+      {/* ヘッダー - コンパクトに */}
+      <div className="text-center py-4 px-4">
+        <h1 className="text-2xl font-bold text-blue-600 mb-1">🏠 おうちタイマー</h1>
+        <p className="text-sm text-gray-600">長い針がここまで来たらおうちに帰ろうね！</p>
+      </div>
 
-        {/* 動画再生ボタン */}
-        <div className="text-center mb-8">
-          <button
-            onClick={selectRandomVideo}
-            className={`
-              font-bold py-3 px-6 rounded-full transition-all transform
-              ${isTimeToGoHome 
-                ? 'bg-red-500 hover:bg-red-600 text-white animate-bounce shadow-lg text-xl' 
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-              }
-            `}
-          >
-            {isTimeToGoHome ? '🏠 お家へ帰る！' : '🏠 お家へ帰る'}
-          </button>
-        </div>
-
-        {/* 動画プレーヤー */}
-        {isPlaying && (
-          <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-            <video
-              src={selectedVideo}
-              controls
-              autoPlay
-              className="w-full h-full object-contain"
-              onEnded={() => setIsPlaying(false)}
-            />
+      {/* メイン画面 - アナログ時計を中央に大きく表示 */}
+      <div className="flex flex-col items-center justify-center md:justify-start min-h-[calc(100vh-200px)] px-4">
+        {/* タイマー設定の説明 */}
+        {!isTimerSet && (
+          <div className="text-center mb-4">
+            <p className="text-lg text-gray-600 mb-2">長い針がその数字まで来たらお知らせします</p>
           </div>
         )}
 
-        {/* アナログ時計 */}
-        <div className="bg-white rounded-full shadow-lg p-8 mb-8 relative">
-          <div className="w-64 h-64 mx-auto relative">
+        {/* アナログ時計 - タッチ可能 */}
+        <div 
+          className={`bg-white rounded-full shadow-2xl p-6 mb-8 relative transition-all duration-200 ${
+            !isTimerSet ? 'cursor-pointer hover:shadow-3xl hover:scale-105' : ''
+          }`}
+          onClick={handleClockClick}
+        >
+          <div className="w-96 h-96 sm:w-[420px] sm:h-[420px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] mx-auto relative">
             {/* 時計の文字盤 */}
             <div className="absolute inset-0 rounded-full border-4 border-gray-300 bg-white">
-              {/* 時間の数字 */}
+              {/* 時間の数字 - より大きく */}
               {[...Array(12)].map((_, i) => {
                 const hour = i + 1;
                 const angle = (hour * 30) - 90; // -90度で12時を上に
-                const x = Math.cos(angle * Math.PI / 180) * 100;
-                const y = Math.sin(angle * Math.PI / 180) * 100;
+                const x = Math.cos(angle * Math.PI / 180) * (window.innerWidth >= 1024 ? 100 : window.innerWidth >= 768 ? 85 : 120); // レスポンシブ対応
+                const y = Math.sin(angle * Math.PI / 180) * (window.innerWidth >= 1024 ? 100 : window.innerWidth >= 768 ? 85 : 120);
+                const isSelected = selectedHour === hour;
                 
                 return (
                   <div
                     key={hour}
-                    className="absolute text-xl font-bold text-gray-700"
+                    className={`absolute text-2xl sm:text-3xl md:text-xl lg:text-2xl font-bold transition-all duration-200 ${
+                      isSelected 
+                        ? 'text-red-500 scale-125 animate-pulse' 
+                        : 'text-gray-700 hover:text-blue-500'
+                    }`}
                     style={{
-                      left: `calc(50% + ${x}px - 12px)`,
-                      top: `calc(50% + ${y}px - 12px)`,
-                      width: '24px',
-                      height: '24px',
+                      left: `calc(50% + ${x}px - 15px)`,
+                      top: `calc(50% + ${y}px - 15px)`,
+                      width: '30px',
+                      height: '30px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -213,45 +232,45 @@ export default function Home() {
                 );
               })}
 
-              {/* 時針 */}
+              {/* 時針 - より太く */}
               <div
                 className="absolute bg-gray-700 origin-bottom"
                 style={{
                   left: '50%',
                   bottom: '50%',
-                  width: '4px',
-                  height: '60px',
+                  width: '6px',
+                  height: '55px',
                   transform: `translateX(-50%) rotate(${getHourAngle(currentTime)}deg)`,
                   transformOrigin: 'bottom center'
                 }}
               />
 
-              {/* 分針 */}
+              {/* 分針 - より太く */}
               <div
                 className={`absolute origin-bottom ${selectedHour && currentTime.getMinutes() >= selectedHour * 5 ? 'bg-red-500' : 'bg-blue-500'}`}
                 style={{
                   left: '50%',
                   bottom: '50%',
-                  width: '3px',
+                  width: '4px',
                   height: '80px',
                   transform: `translateX(-50%) rotate(${getMinuteAngle(currentTime)}deg)`,
                   transformOrigin: 'bottom center'
                 }}
               />
 
-              {/* 中心の点 */}
-              <div className="absolute bg-gray-800 rounded-full w-3 h-3" style={{
-                left: 'calc(50% - 6px)',
-                top: 'calc(50% - 6px)'
+              {/* 中心の点 - より大きく */}
+              <div className="absolute bg-gray-800 rounded-full w-4 h-4" style={{
+                left: 'calc(50% - 8px)',
+                top: 'calc(50% - 8px)'
               }} />
 
               {/* 選択された時間のマーク */}
               {selectedHour && (
                 <div
-                  className="absolute bg-red-400 rounded-full w-4 h-4 animate-pulse"
+                  className="absolute bg-red-400 rounded-full w-5 h-5 animate-pulse"
                   style={{
-                    left: `calc(50% + ${Math.cos(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * 80}px - 8px)`,
-                    top: `calc(50% + ${Math.sin(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * 80}px - 8px)`
+                    left: `calc(50% + ${Math.cos(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * (window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 70 : 100)}px - 10px)`,
+                    top: `calc(50% + ${Math.sin(((selectedHour * 5 * 6) - 90) * Math.PI / 180) * (window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 70 : 100)}px - 10px)`
                   }}
                 />
               )}
@@ -260,7 +279,7 @@ export default function Home() {
 
           {/* 現在時刻の表示 */}
           <div className="text-center mt-4">
-            <p className="text-lg font-bold text-gray-700">
+            <p className="text-xl sm:text-2xl md:text-lg lg:text-xl font-bold text-gray-700">
               {currentTime.toLocaleTimeString('ja-JP', { 
                 hour: '2-digit', 
                 minute: '2-digit',
@@ -270,54 +289,10 @@ export default function Home() {
           </div>
         </div>
 
-        {!isTimerSet ? (
-          /* タイマー設定UI */
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-              🕐 長い針がどこまで来たら帰る？
-            </h2>
-            
-            <div className="grid grid-cols-4 gap-3 mb-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((hour) => (
-                <button
-                  key={hour}
-                  onClick={() => setSelectedHour(hour)}
-                  className={`p-3 rounded-lg font-bold text-lg transition-all ${
-                    selectedHour === hour
-                      ? 'bg-red-400 text-white scale-110 shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {hour}
-                </button>
-              ))}
-            </div>
-
-            {selectedHour && (
-              <div className="text-center mb-4">
-                <p className="text-gray-600">
-                  長い針が <span className="font-bold text-red-500">{selectedHour}</span> になったら帰ります
-                </p>
-              </div>
-            )}
-
-            <button
-              onClick={setTimer}
-              disabled={!selectedHour || notificationStatus !== 'success'}
-              className={`w-full py-3 rounded-lg font-bold text-lg transition-all ${
-                selectedHour && notificationStatus === 'success'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {notificationStatus === 'loading' ? '準備中...' : 
-               notificationStatus !== 'success' ? '通知の許可が必要です' : 
-               'タイマーをセット！'}
-            </button>
-          </div>
-        ) : (
-          /* タイマー設定完了UI */
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+        {/* タイマー状態に応じた表示 */}
+        {isTimerSet ? (
+          /* タイマー設定完了時の表示 */
+          <div className="text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-xl font-bold mb-4 text-green-600">
               タイマーをセットしたよ！
@@ -327,86 +302,152 @@ export default function Home() {
               <br />
               お知らせするからね！
             </p>
-            <div className="text-4xl mb-6">🏠</div>
             <button
               onClick={resetTimer}
-              className="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 transition-colors"
+              className="bg-gray-500 text-white py-3 px-6 rounded-full hover:bg-gray-600 transition-colors text-lg"
             >
               タイマーを変更する
             </button>
           </div>
-        )}
-
-        {/* 通知ステータス */}
-        {notificationStatus !== 'success' && (
-          <div className="mt-4 p-4 bg-yellow-100 rounded-lg">
-            <p className="text-sm text-yellow-700 text-center mb-2">
-              {notificationStatus === 'loading' && '通知の準備をしています...'}
-              {notificationStatus === 'error' && '通知の設定でエラーが発生しました'}
-              {notificationStatus === 'unsupported' && 'このブラウザは通知をサポートしていません'}
+        ) : selectedHour ? (
+          /* 数字選択後の確認画面 */
+          <div className="text-center">
+            <div className="text-4xl mb-4">⏰</div>
+            <p className="text-lg text-gray-600 mb-4">
+              長い針が <span className="font-bold text-red-500 text-2xl">{selectedHour}</span> になったら帰る
             </p>
-            
-            {/* デバッグ情報 */}
-            <div className="mt-2">
-              <button 
-                onClick={() => setShowDebug(!showDebug)}
-                className="text-xs text-blue-600 underline"
+            <div className="space-y-3">
+              <button
+                onClick={setTimer}
+                disabled={notificationStatus !== 'success'}
+                className={`w-full py-4 px-8 rounded-full font-bold text-lg transition-all transform hover:scale-105 ${
+                  notificationStatus === 'success'
+                    ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                {showDebug ? '詳細を隠す' : '詳細を表示'}
+                {notificationStatus === 'loading' ? '準備中...' : 
+                 notificationStatus !== 'success' ? '通知の許可が必要です' : 
+                 'タイマーをセット！'}
               </button>
-              
-              {showDebug && (
-                <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
-                  <div>ブラウザ: {typeof window !== 'undefined' ? navigator.userAgent : 'N/A'}</div>
-                  <div>状態: {notificationStatus}</div>
-                  <div>詳細: {debugInfo}</div>
-                  <div>Service Worker対応: {'serviceWorker' in navigator ? 'Yes' : 'No'}</div>
-                  <div>通知API対応: {'Notification' in window ? 'Yes' : 'No'}</div>
-                  <div>通知許可: {typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'N/A'}</div>
-                </div>
-              )}
+              <button
+                onClick={() => setSelectedHour(null)}
+                className="w-full py-2 px-8 rounded-full font-bold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                選び直す
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* 初期状態 */
+          <div className="text-center">
+            <div className="text-6xl mb-4">☝️</div>
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
+              <p className="text-xl font-bold text-blue-700 mb-2">時計をタッチしてタイマーを設定</p>
+              <p className="text-sm text-blue-500">上の時計をタップしてください</p>
             </div>
           </div>
         )}
+      </div>
 
-        {/* デバッグ用：成功時も小さく情報表示 */}
-        {notificationStatus === 'success' && showDebug && (
-          <div className="mt-4 p-2 bg-green-50 rounded-lg">
-            <div className="text-xs text-green-600">
-              <div>✅ 通知設定完了</div>
-              <div>トークン: {fcmToken ? `${fcmToken.substring(0, 20)}...` : 'なし'}</div>
-            </div>
-          </div>
-        )}
+      {/* 動画再生ボタン - 右下に固定 */}
+      <div className="fixed bottom-6 right-6">
+        <button
+          onClick={selectRandomVideo}
+          className={`
+            font-bold py-4 px-6 rounded-full transition-all transform shadow-lg
+            ${isTimeToGoHome 
+              ? 'bg-red-500 hover:bg-red-600 text-white animate-bounce text-xl' 
+              : 'bg-white hover:bg-gray-50 text-gray-600 border-2 border-gray-300'
+            }
+          `}
+        >
+          {isTimeToGoHome ? '🏠 お家へ帰る！' : '🏠 お家へ帰る'}
+        </button>
+      </div>
 
-        {/* 開発者用デバッグボタン（常に表示） */}
-        <div className="mt-4 text-center">
-          <button 
-            onClick={() => {
-              setShowDebug(!showDebug);
-              // コンソールにも詳細情報を出力
-              console.log('=== Current State ===');
-              console.log('notificationStatus:', notificationStatus);
-              console.log('fcmToken:', fcmToken ? `${fcmToken.substring(0, 50)}...` : null);
-              console.log('debugInfo:', debugInfo);
-              console.log('userAgent:', navigator.userAgent);
-              console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
-            }}
-            className="text-xs text-gray-400 hover:text-gray-600 mr-4"
-          >
-            🐛 Debug
-          </button>
-          
-          {/* テスト通知ボタン */}
-          {fcmToken && (
-            <button 
-              onClick={sendTestNotification}
-              className="text-xs text-blue-400 hover:text-blue-600"
-            >
-              🔔 テスト通知
-            </button>
-          )}
+      {/* 動画プレーヤー */}
+      {isPlaying && (
+        <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+          <video
+            src={selectedVideo}
+            controls
+            autoPlay
+            className="w-full h-full object-contain"
+            onEnded={() => setIsPlaying(false)}
+          />
         </div>
+      )}
+
+      {/* 通知ステータス - 下部に配置 */}
+      {notificationStatus !== 'success' && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-yellow-100 border-t border-yellow-200">
+          <p className="text-sm text-yellow-700 text-center mb-2">
+            {notificationStatus === 'loading' && '通知の準備をしています...'}
+            {notificationStatus === 'error' && '通知の設定でエラーが発生しました'}
+            {notificationStatus === 'unsupported' && 'このブラウザは通知をサポートしていません'}
+          </p>
+          
+          {/* デバッグ情報 */}
+          <div className="text-center">
+            <button 
+              onClick={() => setShowDebug(!showDebug)}
+              className="text-xs text-blue-600 underline"
+            >
+              {showDebug ? '詳細を隠す' : '詳細を表示'}
+            </button>
+            
+            {showDebug && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                <div>ブラウザ: {typeof window !== 'undefined' ? navigator.userAgent : 'N/A'}</div>
+                <div>状態: {notificationStatus}</div>
+                <div>詳細: {debugInfo}</div>
+                <div>Service Worker対応: {'serviceWorker' in navigator ? 'Yes' : 'No'}</div>
+                <div>通知API対応: {'Notification' in window ? 'Yes' : 'No'}</div>
+                <div>通知許可: {typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'N/A'}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* デバッグ用：成功時も小さく情報表示 */}
+      {notificationStatus === 'success' && showDebug && (
+        <div className="fixed bottom-4 left-4 p-2 bg-green-50 rounded-lg">
+          <div className="text-xs text-green-600">
+            <div>✅ 通知設定完了</div>
+            <div>トークン: {fcmToken ? `${fcmToken.substring(0, 20)}...` : 'なし'}</div>
+          </div>
+        </div>
+      )}
+
+      {/* 開発者用デバッグボタン */}
+      <div className="fixed bottom-4 left-4">
+        <button 
+          onClick={() => {
+            setShowDebug(!showDebug);
+            // コンソールにも詳細情報を出力
+            console.log('=== Current State ===');
+            console.log('notificationStatus:', notificationStatus);
+            console.log('fcmToken:', fcmToken ? `${fcmToken.substring(0, 50)}...` : null);
+            console.log('debugInfo:', debugInfo);
+            console.log('userAgent:', navigator.userAgent);
+            console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
+          }}
+          className="text-xs text-gray-400 hover:text-gray-600 mr-4 bg-white bg-opacity-50 px-2 py-1 rounded"
+        >
+          🐛
+        </button>
+        
+        {/* テスト通知ボタン */}
+        {fcmToken && (
+          <button 
+            onClick={sendTestNotification}
+            className="text-xs text-blue-400 hover:text-blue-600 bg-white bg-opacity-50 px-2 py-1 rounded"
+          >
+            🔔
+          </button>
+        )}
       </div>
     </div>
   );
