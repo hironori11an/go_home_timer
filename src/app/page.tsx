@@ -10,6 +10,30 @@ export default function Home() {
   const [notificationStatus, setNotificationStatus] = useState<'loading' | 'success' | 'error' | 'unsupported'>('loading');
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<string>('');
+
+  // 動画ファイルのリスト
+  const videos = [
+    '/videos/superhero-star.mp4',
+    '/videos/superhero_three_house_through.mp4',
+    '/videos/superhero-go-home.mp4'
+  ];
+
+  // タイマーの時刻が過ぎているかチェック
+  const isTimeToGoHome = isTimerSet && selectedHour && (() => {
+    const currentMinute = currentTime.getMinutes();
+    const targetMinute = selectedHour * 5; // 選択された数字 × 5分
+    
+    return currentMinute >= targetMinute;
+  })();
+
+  // ランダムに動画を選択する関数
+  const selectRandomVideo = () => {
+    const randomIndex = Math.floor(Math.random() * videos.length);
+    setSelectedVideo(videos[randomIndex]);
+    setIsPlaying(true);
+  };
 
   // 現在時刻を1秒ごとに更新
   useEffect(() => {
@@ -128,6 +152,35 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-blue-600 mb-2">🏠 おうちタイマー</h1>
           <p className="text-gray-600">長い針がここまで来たらおうちに帰ろうね！</p>
         </div>
+
+        {/* 動画再生ボタン */}
+        <div className="text-center mb-8">
+          <button
+            onClick={selectRandomVideo}
+            className={`
+              font-bold py-3 px-6 rounded-full transition-all transform
+              ${isTimeToGoHome 
+                ? 'bg-red-500 hover:bg-red-600 text-white animate-bounce shadow-lg text-xl' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }
+            `}
+          >
+            {isTimeToGoHome ? '🏠 お家へ帰る！' : '🏠 お家へ帰る'}
+          </button>
+        </div>
+
+        {/* 動画プレーヤー */}
+        {isPlaying && (
+          <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+            <video
+              src={selectedVideo}
+              controls
+              autoPlay
+              className="w-full h-full object-contain"
+              onEnded={() => setIsPlaying(false)}
+            />
+          </div>
+        )}
 
         {/* アナログ時計 */}
         <div className="bg-white rounded-full shadow-lg p-8 mb-8 relative">
