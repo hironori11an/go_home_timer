@@ -180,16 +180,17 @@ export default function Home() {
       <div className="text-center py-4 px-4">
         <h1 className="text-2xl font-bold text-blue-600 mb-1">🏠 おうちタイマー</h1>
         <p className="text-sm text-gray-600">長い針がここまで来たらおうちに帰ろうね！</p>
+        {/* タイマー設定の説明 */}
+        {!isTimerSet && (
+          <div className="text-center mb-4">
+            <p className="text-md text-gray-600 mt-2">長い針がその数字まで来たらお知らせします</p>
+          </div>
+        )}
       </div>
 
       {/* メイン画面 - アナログ時計を中央に大きく表示 */}
       <div className="flex flex-col items-center justify-center md:justify-start min-h-[calc(100vh-200px)] px-4">
-        {/* タイマー設定の説明 */}
-        {!isTimerSet && (
-          <div className="text-center mb-4">
-            <p className="text-lg text-gray-600 mb-2">長い針がその数字まで来たらお知らせします</p>
-          </div>
-        )}
+
 
         {/* アナログ時計 - タッチ可能 */}
         <div 
@@ -198,14 +199,14 @@ export default function Home() {
           }`}
           onClick={handleClockClick}
           style={{
-            '--clock-radius': '120px',
-            '--mark-radius': '100px'
+            '--clock-radius': '130px',
+            '--mark-radius': '90px'
           } as React.CSSProperties & {
             '--clock-radius': string;
             '--mark-radius': string;
           }}
         >
-          <div className="w-96 h-96 sm:w-[420px] sm:h-[420px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] mx-auto relative [--clock-radius:120px] [--mark-radius:100px] sm:[--clock-radius:130px] sm:[--mark-radius:110px] md:[--clock-radius:85px] md:[--mark-radius:70px] lg:[--clock-radius:100px] lg:[--mark-radius:80px]">
+          <div className="w-90 h-90 sm:w-[390px] sm:h-[390px] md:w-[270px] md:h-[270px] lg:w-[320px] lg:h-[320px] mx-auto relative [--clock-radius:130px] [--mark-radius:90px] sm:[--clock-radius:135px] sm:[--mark-radius:95px] md:[--clock-radius:95px] md:[--mark-radius:60px] lg:[--clock-radius:115px] lg:[--mark-radius:70px]">
             {/* 時計の文字盤 */}
             <div className="absolute inset-0 rounded-full border-4 border-gray-300 bg-white">
               {/* 時間の数字 - より大きく */}
@@ -244,7 +245,7 @@ export default function Home() {
                   left: '50%',
                   bottom: '50%',
                   width: '6px',
-                  height: '55px',
+                  height: '68px',
                   transform: `translateX(-50%) rotate(${getHourAngle(currentTime)}deg)`,
                   transformOrigin: 'bottom center'
                 }}
@@ -257,7 +258,7 @@ export default function Home() {
                   left: '50%',
                   bottom: '50%',
                   width: '4px',
-                  height: '80px',
+                  height: '95px',
                   transform: `translateX(-50%) rotate(${getMinuteAngle(currentTime)}deg)`,
                   transformOrigin: 'bottom center'
                 }}
@@ -346,10 +347,11 @@ export default function Home() {
         ) : (
           /* 初期状態 */
           <div className="text-center">
-            <div className="text-6xl mb-4">☝️</div>
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
-              <p className="text-xl font-bold text-blue-700 mb-2">時計をタッチしてタイマーを設定</p>
-              <p className="text-sm text-blue-500">上の時計をタップしてください</p>
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-2 shadow-lg">
+              <p className="text-base sm:text-lg md:text-xl font-bold text-blue-700 mb-2 flex items-center justify-center gap-2 whitespace-nowrap">
+                <span>☝️</span>
+                <span>時計をタッチしてタイマーを設定</span>
+              </p>
             </div>
           </div>
         )}
