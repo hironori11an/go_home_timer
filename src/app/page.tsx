@@ -296,6 +296,7 @@ export default function Home() {
         </div>
 
         {/* タイマー状態に応じた表示 */}
+        <div className="min-h-[200px] flex flex-col justify-center">
         {isTimerSet ? (
           /* タイマー設定完了時の表示 */
           <div className="text-center">
@@ -318,7 +319,6 @@ export default function Home() {
         ) : selectedHour ? (
           /* 数字選択後の確認画面 */
           <div className="text-center">
-            <div className="text-4xl mb-4">⏰</div>
             <p className="text-lg text-gray-600 mb-4">
               長い針が <span className="font-bold text-red-500 text-2xl">{selectedHour}</span> になったら帰る
             </p>
@@ -347,14 +347,15 @@ export default function Home() {
         ) : (
           /* 初期状態 */
           <div className="text-center">
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-2 shadow-lg">
-              <p className="text-base sm:text-lg md:text-xl font-bold text-blue-700 mb-2 flex items-center justify-center gap-2 whitespace-nowrap">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-3 shadow-lg">
+              <p className="text-base sm:text-lg md:text-xl font-bold text-blue-700 flex items-center justify-center gap-2 whitespace-nowrap">
                 <span>☝️</span>
                 <span>時計をタッチしてタイマーを設定</span>
               </p>
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* 動画再生ボタン - 右下に固定 */}
