@@ -178,10 +178,8 @@ const worker = {
       try {
         const notification = message.body;
         
-        console.log(`Processing scheduled notification for target hour: ${notification.targetHour}`);
-        
         // 共通の通知送信関数を呼び出し
-        const result = await sendNotificationInternal(env, {
+        await sendNotificationInternal(env, {
           token: notification.fcmToken,
           title: notification.message.title,
           body: notification.message.body,
@@ -190,7 +188,6 @@ const worker = {
           data: notification.message.data,
         });
         
-        console.log(`Scheduled notification sent successfully for target hour ${notification.targetHour}:`, result);
         message.ack();
         
       } catch (error) {

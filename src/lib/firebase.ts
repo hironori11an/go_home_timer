@@ -27,53 +27,38 @@ function isAndroidChrome() {
 }
 
 export async function confirmNotification() {
-  console.log('=== confirmNotification started ===');
-  console.log('User Agent:', typeof window !== 'undefined' ? navigator.userAgent : 'N/A');
-  console.log('Is Android Chrome:', isAndroidChrome());
   
   // ブラウザ環境でない場合は早期リターン
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-    console.log('Service Worker not supported or not in browser environment');
     return null;
   }
 
   // messagingが初期化されていない場合は初期化
   if (!messaging) {
-    console.log('Initializing messaging...');
     messaging = getMessaging(firebaseApp);
   }
 
   try {
-    console.log('Requesting notification permission...');
     // 通知許可をリクエスト
     const permission = await Notification.requestPermission();
-    console.log('Notification permission result:', permission);
     
     if (permission !== 'granted') {
       throw new Error('通知許可が拒否されました');
     }
 
-    console.log('Notification permission granted.');
-
     // Service Workerを登録
     let registration;
     try {
-      console.log('Registering Service Worker...');
       
       // Android Chrome の場合はデフォルトスコープを使用
       const swOptions = isAndroidChrome() 
         ? { scope: '/' }  // Android Chrome では広いスコープを使用
         : { scope: '/firebase-cloud-messaging-push-scope' };
       
-      console.log('Service Worker options:', swOptions);
-      
       registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', swOptions);
-      console.log('Service Worker registered with scope:', registration.scope);
       
       // Service Workerが有効になるまで待つ
-      console.log('Waiting for Service Worker to be ready...');
       await navigator.serviceWorker.ready;
-      console.log('Service Worker is ready');
       
     } catch (swError) {
       console.error('Service Worker registration failed:', swError);
@@ -82,24 +67,17 @@ export async function confirmNotification() {
 
     // FCMトークンを取得
     const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-    console.log('VAPID Key exists:', !!vapidKey);
-    console.log('VAPID Key length:', vapidKey ? vapidKey.length : 0);
     
     if (!vapidKey) {
       throw new Error('VAPID キーが設定されていません');
     }
 
-    console.log('Getting FCM token...');
     const token = await getToken(messaging, {
       vapidKey: vapidKey,
       serviceWorkerRegistration: registration,
     });
     
-    console.log('FCM token received:', !!token);
-    console.log('FCM token length:', token ? token.length : 0);
-    
     if (token) {
-      console.log('=== confirmNotification completed successfully ===');
       return token;
     } else {
       throw new Error('FCMトークンの取得に失敗しました');

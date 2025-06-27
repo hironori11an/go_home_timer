@@ -49,13 +49,6 @@ export class FCMService {
     this.privateKey = bindings.FCM_PRIVATE_KEY.replace(/\\n/g, '\n');
     this.clientEmail = bindings.FCM_CLIENT_EMAIL;
     this.corsOrigin = bindings.CORS_ORIGIN;
-    
-    console.log('FCM Service initialized:', {
-      projectId: this.projectId,
-      clientEmail: this.clientEmail,
-      privateKeyLength: this.privateKey.length,
-      corsOrigin: this.corsOrigin,
-    });
   }
 
   private async importPrivateKey(pem: string): Promise<CryptoKey> {

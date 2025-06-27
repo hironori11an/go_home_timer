@@ -433,15 +433,6 @@ export default function Home() {
         <button 
           onClick={() => {
             setShowDebug(!showDebug);
-            // コンソールにも詳細情報を出力
-            console.log('=== Current State ===');
-            console.log('notificationStatus:', notificationStatus);
-            console.log('fcmToken:', fcmToken ? `${fcmToken.substring(0, 50)}...` : null);
-            console.log('debugInfo:', debugInfo);
-            if (typeof window !== 'undefined') {
-              console.log('userAgent:', navigator.userAgent);
-              console.log('Notification.permission:', 'Notification' in window ? Notification.permission : 'N/A');
-            }
           }}
           className="text-xs text-gray-400 hover:text-gray-600 mr-4 bg-white bg-opacity-50 px-2 py-1 rounded"
         >
