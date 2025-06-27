@@ -19,15 +19,7 @@ if (typeof window !== 'undefined') {
   messaging = getMessaging(firebaseApp);
 }
 
-// User Agent判定関数
-function isAndroidChrome() {
-  if (typeof window === 'undefined') return false;
-  const userAgent = navigator.userAgent;
-  return userAgent.includes('Android') && userAgent.includes('Chrome');
-}
-
 export async function confirmNotification() {
-  
   // ブラウザ環境でない場合は早期リターン
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return null;
@@ -43,22 +35,51 @@ export async function confirmNotification() {
     const permission = await Notification.requestPermission();
     
     if (permission !== 'granted') {
-      throw new Error('通知許可が拒否されました');
+      throw new Error(`通知許可が拒否されました。現在の状態: ${permission}`);
     }
 
     // Service Workerを登録
     let registration;
     try {
+      // 既存のService Worker登録をチェック
+      const existingRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+      if (existingRegistration) {
+        registration = existingRegistration;
+      } else {
+        // スコープを統一して問題を避ける
+        const swOptions = { scope: '/' };
+        registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', swOptions);
+      }
       
-      // Android Chrome の場合はデフォルトスコープを使用
-      const swOptions = isAndroidChrome() 
-        ? { scope: '/' }  // Android Chrome では広いスコープを使用
-        : { scope: '/firebase-cloud-messaging-push-scope' };
+      // Service Workerが有効になるまで待つ（タイムアウト付き）
+      try {
+        // 10秒のタイムアウトを設定
+        const readyPromise = navigator.serviceWorker.ready;
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Service Worker ready timeout')), 10000)
+        );
+        
+        await Promise.race([readyPromise, timeoutPromise]);
+        
+      } catch (readyError) {
+        // タイムアウトしても処理を継続
+        console.warn('Service Worker ready timeout, continuing anyway...', readyError);
+      }
       
-      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', swOptions);
+      // Service Worker内でのFirebase初期化完了をより確実に待つ
+      let retryCount = 0;
+      const maxRetries = 6; // 3秒まで短縮
       
-      // Service Workerが有効になるまで待つ
-      await navigator.serviceWorker.ready;
+      while (retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // 500ms待機
+        
+        // Service Workerの状態をチェック
+        if (registration.active && registration.active.state === 'activated') {
+          break;
+        }
+        
+        retryCount++;
+      }
       
     } catch (swError) {
       console.error('Service Worker registration failed:', swError);
@@ -69,25 +90,48 @@ export async function confirmNotification() {
     const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
     
     if (!vapidKey) {
-      throw new Error('VAPID キーが設定されていません');
+      throw new Error('VAPID キーが設定されていません（NEXT_PUBLIC_FIREBASE_VAPID_KEY）');
     }
 
-    const token = await getToken(messaging, {
-      vapidKey: vapidKey,
-      serviceWorkerRegistration: registration,
-    });
+    // トークン取得のリトライ
+    let token;
+    let tokenRetryCount = 0;
+    const maxTokenRetries = 3;
+    
+    while (tokenRetryCount < maxTokenRetries) {
+      try {
+        token = await getToken(messaging, {
+          vapidKey: vapidKey,
+          serviceWorkerRegistration: registration,
+        });
+        
+        if (token) {
+          break;
+        }
+        
+        throw new Error('トークンが取得できませんでした（空のレスポンス）');
+        
+      } catch (tokenError) {
+        tokenRetryCount++;
+        console.error(`Token retrieval attempt ${tokenRetryCount} failed:`, tokenError);
+        
+        if (tokenRetryCount >= maxTokenRetries) {
+          throw tokenError;
+        }
+        
+        // 1秒待ってからリトライ
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
     
     if (token) {
       return token;
     } else {
-      throw new Error('FCMトークンの取得に失敗しました');
+      throw new Error('FCMトークンの取得に失敗しました（リトライ後）');
     }
     
   } catch (error) {
-    console.error('=== Notification setup failed ===');
-    console.error('Error details:', error);
-    console.error('Error message:', error instanceof Error ? error.message : String(error));
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Notification setup failed:', error);
     throw error;
   }
 }

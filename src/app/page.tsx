@@ -345,17 +345,6 @@ export default function Home() {
           />
         </div>
       )}
-
-      {/* 通知ステータス - 下部に配置 */}
-      {notificationStatus !== 'success' && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-yellow-100 border-t border-yellow-200">
-          <p className="text-sm text-yellow-700 text-center mb-2">
-            {notificationStatus === 'loading' && '通知の準備をしています...'}
-            {notificationStatus === 'error' && '通知の設定でエラーが発生しました'}
-            {notificationStatus === 'unsupported' && 'このブラウザは通知をサポートしていません'}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
