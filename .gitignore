@@ -43,3 +43,5 @@ next-env.d.ts
 
 # cloudflare
 .dev.vars
+
+.cursor
