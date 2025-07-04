@@ -15,9 +15,8 @@ sequenceDiagram
     participant CW as ☁️ Cloudflare Workers
     participant Q as 📬 Cloudflare Queue
     participant FCM as 🔥 Firebase Cloud Messaging
-    participant FCMService as 🚀 FCM Service
 
-    Note over U,FCMService: 1. 初期セットアップ
+    Note over U,FCM: 1. 初期セットアップ
     U->>B: アプリを開く
     B->>SW: Service Worker登録
     SW->>FCM: FCMトークン取得
@@ -26,7 +25,7 @@ sequenceDiagram
     B->>U: 通知許可ダイアログ
     U->>B: 通知許可
 
-    Note over U,FCMService: 2. タイマー設定
+    Note over U,FCM: 2. タイマー設定
     U->>N: 時計をタッチして時間選択
     N->>U: 確認画面表示
     U->>N: 「タイマーをセット！」ボタン押下
@@ -40,12 +39,11 @@ sequenceDiagram
     API-->>N: 成功レスポンス
     N->>U: 「タイマーがセットされました」表示
 
-    Note over U,FCMService: 3. スケジュールされた通知送信
+    Note over U,FCM: 3. スケジュールされた通知送信
     Note over Q: 指定時刻に到達
     Q->>CW: キューメッセージ実行
-    CW->>FCMService: sendMessage()呼び出し
-    Note over FCMService: Googleアクセストークン取得
-    FCMService->>FCM: プッシュ通知送信リクエスト
+    Note over CW: FCMServiceクラスでGoogleアクセストークン取得<br/>fcmService.sendMessage()実行
+    CW->>FCM: プッシュ通知送信リクエスト
     FCM->>SW: プッシュ通知配信
     SW->>B: 通知を表示
     B->>U: 🔔 「おうちに帰る時間だよ！」通知
@@ -82,12 +80,13 @@ sequenceDiagram
 - **役割**:
   - スケジュールリクエスト処理
   - Cloudflare Queueへの遅延実行登録
-  - FCMサービス呼び出し
+  - FCM Service クラスによる通知送信
 
-### 5. FCM Service
+### 5. FCM Service クラス
 - **場所**: `cloudflare-workers/src/fcm.ts`
 - **役割**:
-  - Google認証
+  - **Cloudflare Workers内で実行される内部クラス**
+  - Google認証（JWT + OAuth2）
   - Firebase Cloud Messaging API呼び出し
 
 ### 6. Cloudflare Queue
