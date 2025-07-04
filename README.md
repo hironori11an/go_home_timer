@@ -1,14 +1,8 @@
 # 🏠 おうちタイマー
 
-長い針がここまで来たらおうちに帰ろうね！子ども向けの可愛いタイマーアプリです。
+帰りたがらない子ども向けの、時計タイマーアプリ。
+設定した時間になると、プッシュ通知が送信され、スーパーヒーローが帰宅する動画が流れる
 
-## ✨ 機能
-
-- 📱 **モバイルファースト**: スマートフォンで使いやすいレスポンシブデザイン
-- 🕐 **アナログ時計**: 子どもにもわかりやすいアナログ時計表示
-- 🔔 **プッシュ通知**: 指定時刻にWebプッシュ通知でお知らせ
-- 🎯 **簡単操作**: 長針の数値（1-12）を選択するだけ
-- 🎨 **子ども向けUI**: 楽しくて分かりやすいインターフェース
 
 ## 🛠️ 技術仕様
 
@@ -17,12 +11,14 @@
 - **通知サービス**: Firebase Cloud Messaging (FCM)
 - **スケジューリング**: Cloudflare Workers + Cloudflare Queue
 - **PWA対応**: Progressive Web App
+- [プッシュ通知のシステムフロー図](/push-notification-system-flow.md)
 
 ## 🚀 セットアップ
 
 ### 前提条件
 
 - Node.js 20以上
+- Vercel アカウント
 - Firebase プロジェクト
 - Cloudflare アカウント
 
@@ -35,19 +31,8 @@
 
 ### 2. 環境変数の設定
 
-`.env.local` ファイルを作成：
+`.env.local` ファイルを作成(`env.example`を参照)
 
-```bash
-# Firebase Configuration (Frontend)
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
-NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key
-```
 
 ### 3. フロントエンドの起動
 
@@ -56,12 +41,12 @@ npm install
 npm run dev
 ```
 
-### 4. Cloudflare Workers のデプロイ
+### 4. Cloudflare Workers の起動
 
 ```bash
 cd cloudflare-workers
 npm install
-wrangler deploy
+wrangler dev
 ```
 
 ## 📱 使い方
@@ -73,24 +58,13 @@ wrangler deploy
 
 ## 🔧 開発
 
-### ローカル開発環境
-
-```bash
-# フロントエンド
-npm run dev
-
-# Cloudflare Workers (別ターミナル)
-cd cloudflare-workers
-wrangler dev
-```
-
 ### ビルドとデプロイ
 
-```bash
-# フロントエンド（Vercel）
-npm run build
+- フロントエンド（Vercel）
+  - GitHubと連携。mainブランチにマージ、コミット時にデプロイ
+- Cloudflare Workers
 
-# Cloudflare Workers
+```bash
 cd cloudflare-workers
 wrangler deploy --env production
 ```
@@ -119,39 +93,4 @@ go_home_timer/
 └── docs/
     └── implementation_plan_front.md # 実装計画書
 ```
-
-## 🎯 実装のポイント
-
-### 時間計算ロジック
-
-長針の位置を分単位に変換：
-- 1 → 5分
-- 2 → 10分
-- 3 → 15分
-- ...
-- 12 → 60分（0分）
-
-### スケジューリング
-
-1. フロントエンドで選択された時間を計算
-2. Next.js APIでCloudflare Workersに送信
-3. Cloudflare Queueでスケジューリング
-4. 指定時刻にFCMでプッシュ通知送信
-
-## 🔔 通知について
-
-- ブラウザの通知許可が必要
-- PWA対応によりホーム画面に追加可能
-- バックグラウンドでもプッシュ通知を受信
-
-## 🎨 デザインコンセプト
-
-- 子どもが直感的に理解できるUI
-- 明るく親しみやすい色使い
-- タッチしやすいボタンサイズ
-- アナログ時計による視覚的な時間理解
-
-## 📄 ライセンス
-
-MIT License
 
